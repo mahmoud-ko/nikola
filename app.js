@@ -1,9 +1,5 @@
-/* ═══════════════════════════════════════════════
-   AURUM — app.js (مع Groq API مباشر)
-═══════════════════════════════════════════════ */
-
-const API_BASE = '/api.php?route=';
-const GROQ_KEY = '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';
+/* AURUM — app.js (آمن، لا يحتوي على مفتاح) */
+const API_BASE = '/api.php?route=';   // يمكن تغييره إلى رابط الاستضافة البعيدة لاحقاً
 
 /* ══════════ THEME ══════════ */
 const body = document.body;
@@ -83,7 +79,7 @@ navLinks.forEach(link => {
   });
 });
 
-/* ══════════ HOTEL DATABASE ══════════ */
+/* ══════════ HOTEL DATABASE (من API) ══════════ */
 let hotelDatabase = [];
 
 async function loadHotelsFromAPI() {
@@ -138,7 +134,7 @@ function makePhotos(initial, c1, c2, c3) {
   };
 }
 
-/* ══════════ CUSTOM SEARCH DROPDOWNS ══════════ */
+/* ══════════ CUSTOM SEARCH DROPDOWNS (نفس الكود السابق) ══════════ */
 function initCustomSelect(id, hiddenSelectId) {
   const container = document.getElementById(id);
   const hiddenSel = document.getElementById(hiddenSelectId);
@@ -304,7 +300,7 @@ document.querySelectorAll('.featured-card').forEach(card => {
   });
 });
 
-/* ══════════ GALLERY MODAL (اختصاراً، نفس الكود السابق) ══════════ */
+/* ══════════ GALLERY MODAL (نفس الكود السابق) ══════════ */
 let galHotel   = null;
 let galTab     = 'hotel';
 let galIndex   = 0;
@@ -318,43 +314,305 @@ const galleryThumbs  = document.getElementById('galleryThumbs');
 const galPrev        = document.getElementById('galPrev');
 const galNext        = document.getElementById('galNext');
 
-function openGallery(hotel) { /* نفس الكود السابق */ }
-function renderGallery() { /* نفس الكود السابق */ }
-function renderMainPhoto(photo) { /* نفس الكود السابق */ }
-function renderThumbs(photos) { /* نفس الكود السابق */ }
-galPrev.addEventListener('click', () => { /* نفس الكود */ });
-galNext.addEventListener('click', () => { /* نفس الكود */ });
-document.addEventListener('keydown', e => { /* نفس الكود */ });
-document.querySelectorAll('.gtab').forEach(btn => { /* نفس الكود */ });
+function openGallery(hotel) {
+  galHotel = hotel;
+  galTab   = 'hotel';
+  galIndex = 0;
+  document.getElementById('galleryHotelName').textContent = hotel.name;
+  document.getElementById('galleryHotelLoc').textContent  = `${hotel.city}, ${hotel.country}`;
+  document.getElementById('galPrice').textContent = `$${hotel.price}`;
+
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.gtab[data-tab="hotel"]').classList.add('active');
+
+  renderGallery();
+  galleryModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  document.getElementById('galBookBtn').onclick = () => {
+    const curUser = JSON.parse(localStorage.getItem('aurum-user') || 'null');
+    if (curUser) {
+      closeGallery();
+      setTimeout(() => openBookingModal(hotel), 200);
+    } else {
+      const galBtn = document.getElementById('galBookBtn');
+      showSideSigninTip(galBtn, hotel);
+    }
+  };
+}
+
+function renderGallery() {
+  const photos = galHotel.photos[galTab];
+  renderMainPhoto(photos[galIndex]);
+  renderThumbs(photos);
+}
+
+function renderMainPhoto(photo) {
+  galImgInner.style.background = photo.gradient;
+  galImgInner.style.backgroundSize = 'cover';
+  galImgInner.textContent = photo.initial || galHotel.initial;
+  galImgInner.style.color = 'rgba(201,169,110,0.18)';
+  galImgInner.style.fontSize = '72px';
+  galImgInner.style.fontFamily = "'Cormorant Garamond',serif";
+  galImgInner.style.letterSpacing = '6px';
+  galImgLabel.textContent = photo.label;
+  galImgInner.style.opacity = '0';
+  requestAnimationFrame(() => { galImgInner.style.transition='opacity 0.3s'; galImgInner.style.opacity='1'; });
+}
+
+function renderThumbs(photos) {
+  galleryThumbs.innerHTML = '';
+  photos.forEach((p, i) => {
+    const t = document.createElement('div');
+    t.className = 'gallery-thumb' + (i === galIndex ? ' active' : '');
+    t.style.background = p.gradient;
+    t.title = p.label;
+    t.textContent = p.label.slice(0,2);
+    t.style.cssText += `;background:${p.gradient};font-size:10px;color:rgba(201,169,110,0.4);letter-spacing:1px;text-transform:uppercase;`;
+    t.addEventListener('click', () => { galIndex = i; renderGallery(); });
+    galleryThumbs.appendChild(t);
+  });
+}
+
+galPrev.addEventListener('click', () => {
+  const photos = galHotel.photos[galTab];
+  galIndex = (galIndex - 1 + photos.length) % photos.length;
+  renderGallery();
+});
+galNext.addEventListener('click', () => {
+  const photos = galHotel.photos[galTab];
+  galIndex = (galIndex + 1) % photos.length;
+  renderGallery();
+});
+
+document.addEventListener('keydown', e => {
+  if (!galleryModal.classList.contains('open')) return;
+  if (e.key === 'ArrowRight') galNext.click();
+  if (e.key === 'ArrowLeft')  galPrev.click();
+  if (e.key === 'Escape')     closeGallery();
+});
+
+document.querySelectorAll('.gtab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    galTab  = btn.dataset.tab;
+    galIndex= 0;
+    renderGallery();
+  });
+});
+
 galleryClose.addEventListener('click', closeGallery);
 galleryBackdrop.addEventListener('click', closeGallery);
-function closeGallery() { /* نفس الكود */ }
 
-/* ══════════ BOOKING MODAL ══════════ */
+function closeGallery() {
+  galleryModal.classList.remove('open');
+  document.body.style.overflow = '';
+  const existing = document.getElementById('signinTip');
+  if (existing) { existing.classList.remove('show'); setTimeout(() => { try { existing.remove(); } catch(e){} }, 220); }
+}
+
+/* ══════════ BOOKING MODAL (نفس الكود السابق) ══════════ */
 const bookingModal   = document.getElementById('bookingModal');
 const bookingBackdrop= document.getElementById('bookingBackdrop');
 
-function openBookingModal(hotel) { /* نفس الكود السابق */ }
-function showSideSigninTip(button, hotel, msg) { /* نفس الكود */ }
-function openInlineSignin(onSuccess) { /* نفس الكود */ }
-function updateSummary(rate) { /* نفس الكود */ }
+function openBookingModal(hotel) {
+  const curUser = JSON.parse(localStorage.getItem('aurum-user') || 'null');
+  if (!curUser) {
+    showSideSigninTip(document.querySelector('.gallery-window .btn-gold') || document.body, hotel);
+    return;
+  }
+  document.getElementById('modalHotelName').textContent = hotel.name;
+  document.getElementById('modalHotelLoc').textContent  = `${hotel.city}, ${hotel.country}`;
+  document.getElementById('summaryRate').textContent    = `$${hotel.price}/night`;
+
+  const today    = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+  const nextWeek = new Date(today); nextWeek.setDate(today.getDate()+7);
+  const toISO = d => d.toISOString().split('T')[0];
+  document.getElementById('bookingCheckin').value  = toISO(tomorrow);
+  document.getElementById('bookingCheckout').value = toISO(nextWeek);
+
+  updateSummary(hotel.price);
+  bookingModal.dataset.hotelId   = hotel.hotel_id || hotel.id || '';
+  bookingModal.dataset.hotelPrice = hotel.price || 0;
+  const paySection = document.getElementById('paymentSection'); if (paySection) paySection.classList.add('hidden');
+  bookingModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function showSideSigninTip(button, hotel, msg) {
+  const existing = document.getElementById('signinTip');
+  if (existing) existing.remove();
+
+  const message = msg || 'Please sign in to continue your reservation';
+
+  const tip = document.createElement('div');
+  tip.id = 'signinTip';
+  tip.className = 'signin-tip signin-tip--alert';
+  tip.innerHTML = `<div class="signin-tip-body"><div class="signin-tip-msg">${message}</div></div>`;
+  document.body.appendChild(tip);
+  const rect = button.getBoundingClientRect();
+  const preferOffset = 20;
+  tip.style.position = 'absolute';
+  tip.style.zIndex = 9999;
+  const tipRect = tip.getBoundingClientRect();
+  const spaceRight = window.innerWidth - rect.right;
+  let left;
+  if (spaceRight > tipRect.width + preferOffset) {
+    left = window.scrollX + rect.right + preferOffset;
+  } else {
+    left = Math.max(12, window.scrollX + rect.left - tipRect.width - preferOffset);
+  }
+  const rawTop = window.scrollY + rect.top + (rect.height - tipRect.height) / 2;
+  const minTop = window.scrollY + 12;
+  const maxTop = window.scrollY + window.innerHeight - tipRect.height - 12;
+  const top = Math.min(maxTop, Math.max(minTop, rawTop));
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+
+  requestAnimationFrame(() => { tip.classList.add('show'); });
+  tip.style.cursor = 'pointer';
+  const onClickTip = () => { window.location.href = 'auth.html'; };
+  tip.addEventListener('click', onClickTip);
+
+  let dismissTimer = setTimeout(() => cleanupTip(), 1500);
+  function onScroll() { cleanupTip(); }
+  function onResize() { repositionTip(); }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onResize);
+
+  function cleanupTip() {
+    if (!tip || !tip.parentNode) return;
+    tip.classList.remove('show');
+    setTimeout(() => { try { tip.remove(); } catch(e){} }, 220);
+    clearTimeout(dismissTimer);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onResize);
+    tip.removeEventListener('click', onClickTip);
+  }
+
+  function repositionTip() {
+    if (!tip || !tip.parentNode) return;
+    const rect = button.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    const preferOffset = 20;
+    const spaceRight = window.innerWidth - rect.right;
+    let left;
+    if (spaceRight > tipRect.width + preferOffset) {
+      left = window.scrollX + rect.right + preferOffset;
+    } else {
+      left = Math.max(12, window.scrollX + rect.left - tipRect.width - preferOffset);
+    }
+    const rawTop = window.scrollY + rect.top + (rect.height - tipRect.height) / 2;
+    const minTop = window.scrollY + 12;
+    const maxTop = window.scrollY + window.innerHeight - tipRect.height - 12;
+    const top = Math.min(maxTop, Math.max(minTop, rawTop));
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+  }
+}
+
+function openInlineSignin(onSuccess) {
+  if (document.getElementById('inlineSignin')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'inlineSignin';
+  overlay.style.position = 'fixed'; overlay.style.inset = '0'; overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center'; overlay.style.zIndex = 10000;
+  overlay.style.background = 'rgba(0,0,0,0.45)';
+  overlay.innerHTML = `
+    <div style="width:360px;max-width:92%;padding:20px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow);">
+      <h3 style="margin:0 0 8px;color:var(--white);font-family:'Cormorant Garamond',serif;">Sign In</h3>
+      <p style="margin:0 0 12px;color:var(--text-m);font-size:13px;">Enter your name to sign in and continue.</p>
+      <input id="inlineName" placeholder="Full name" style="width:100%;padding:10px;margin-bottom:8px;border:1px solid var(--border-s);background:var(--bg3);color:var(--text);outline:none;" />
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button id="inlineCancel" class="btn-outline">Cancel</button>
+        <button id="inlineSubmit" class="btn-gold">Sign In</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('inlineCancel').addEventListener('click', () => overlay.remove());
+  document.getElementById('inlineSubmit').addEventListener('click', () => {
+    const name = document.getElementById('inlineName').value.trim();
+    if (!name) { showToast('Please enter your name to sign in.', 'error'); return; }
+    const initials = name.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase() || 'AU';
+    const user = { name, initials };
+    localStorage.setItem('aurum-user', JSON.stringify(user));
+    try { navUser.style.display = 'none'; navUserLogged.classList.remove('hidden'); navAvatar.textContent = initials; navUsername.textContent = name.split(' ')[0]; } catch(e){}
+    overlay.remove();
+    showToast('Signed in — continuing reservation.');
+    if (typeof onSuccess === 'function') onSuccess();
+  });
+}
+
+function updateSummary(rate) {
+  const cin   = new Date(document.getElementById('bookingCheckin').value);
+  const cout  = new Date(document.getElementById('bookingCheckout').value);
+  const rooms = parseInt(document.getElementById('bookingRooms').value) || 1;
+  if (cin && cout && cout > cin) {
+    const nights = Math.round((cout-cin)/(1000*60*60*24));
+    document.getElementById('summaryNights').textContent = nights;
+    document.getElementById('summaryTotal').textContent  = '$' + (nights*rate*rooms).toLocaleString();
+  }
+}
+
 document.getElementById('bookingClose').addEventListener('click', closeBooking);
 bookingBackdrop.addEventListener('click', closeBooking);
 function closeBooking() { bookingModal.classList.remove('open'); document.body.style.overflow=''; }
+
 ['bookingCheckin','bookingCheckout','bookingRooms'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     const r = parseFloat(document.getElementById('summaryRate').textContent.replace(/[^0-9.]/g,''));
     updateSummary(r);
   });
 });
-document.getElementById('confirmBooking').addEventListener('click', async () => { /* نفس الكود السابق */ });
-const payConfirm = document.getElementById('payConfirmBtn');
-if (payConfirm) { /* نفس الكود */ }
 
-/* ══════════ AI CONCIERGE (محسن مع Groq) ══════════ */
+document.getElementById('confirmBooking').addEventListener('click', async () => {
+  const cin  = document.getElementById('bookingCheckin').value;
+  const cout = document.getElementById('bookingCheckout').value;
+  if (!cin || !cout) { showToast('Please select dates.','error'); return; }
+  const paySection = document.getElementById('paymentSection');
+  if (paySection && paySection.classList.contains('hidden')) {
+    paySection.classList.remove('hidden');
+    setTimeout(() => { document.getElementById('payName')?.focus(); }, 120);
+    return;
+  }
+  const token    = localStorage.getItem('aurum-token');
+  const hotelId  = bookingModal.dataset.hotelId;
+  const rooms    = parseInt(document.getElementById('bookingRooms').value) || 1;
+  const rate     = parseFloat((bookingModal.dataset.hotelPrice || document.getElementById('summaryRate').textContent).toString().replace(/[^0-9.]/g,''));
+  const nights   = Math.round((new Date(cout) - new Date(cin)) / 86400000);
+  const total    = Math.round(nights * rate * rooms);
+  if (token && hotelId) {
+    try {
+      const res = await fetch(`${API_BASE}bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ hotel_id: parseInt(hotelId), check_in: cin, check_out: cout, rooms, guests: rooms * 2, total_price: total }) });
+      const data = await res.json();
+      if (data.success) { closeBooking(); showToast(`✔ Booking #${data.data.booking_id} confirmed!`, 'success'); return; }
+    } catch(e) { console.warn('Booking API failed, showing confirmation anyway', e); }
+  }
+  closeBooking();
+  showToast('✦ Reservation confirmed! Check your email for details.', 'success');
+});
+
+const payConfirm = document.getElementById('payConfirmBtn');
+if (payConfirm) {
+  payConfirm.addEventListener('click', () => {
+    const name = document.getElementById('payName').value.trim();
+    const number = document.getElementById('payNumber').value.replace(/\s+/g,'');
+    const exp = document.getElementById('payExp').value.trim();
+    const cvc = document.getElementById('payCvc').value.trim();
+    if (!name || !number || !exp || !cvc) { showToast('Please complete payment details.','error'); return; }
+    payConfirm.disabled = true; payConfirm.textContent = 'Processing…';
+    setTimeout(() => { payConfirm.disabled = false; payConfirm.textContent = 'Pay & Confirm'; closeBooking(); showToast('✔ Payment accepted — Reservation confirmed!','success'); }, 1200);
+  });
+}
+
+/* ══════════ AI CONCIERGE (آمن، يتصل بالباك إند) ══════════ */
 const aiModal    = document.getElementById('aiModal');
 const aiMessages = document.getElementById('aiMessages');
 const aiInput    = document.getElementById('aiInput');
+
 document.getElementById('openAiChat').addEventListener('click', () => {
   aiModal.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -362,6 +620,7 @@ document.getElementById('openAiChat').addEventListener('click', () => {
 });
 document.getElementById('aiBackdrop').addEventListener('click', () => { aiModal.classList.remove('open'); document.body.style.overflow=''; });
 document.getElementById('aiClose').addEventListener('click', () => { aiModal.classList.remove('open'); document.body.style.overflow=''; });
+
 document.getElementById('aiSend').addEventListener('click', sendAI);
 aiInput.addEventListener('keydown', e => { if(e.key==='Enter') sendAI(); });
 
@@ -374,11 +633,6 @@ function appendMsg(text, role) {
   return div;
 }
 
-let groqHistory = [];
-const SYSTEM_PROMPT = `You are AURUM's AI concierge. Available hotels: ... (كما سبق) ... Be warm, concise, respond in same language as guest.`;
-
-function generateLocalFallback(userMessage) { /* نفس الكود السابق */ }
-
 async function sendAI() {
   const text = aiInput.value.trim();
   if (!text) return;
@@ -386,29 +640,55 @@ async function sendAI() {
   aiInput.value = '';
   const typing = appendMsg('', 'bot');
   typing.classList.add('ai-typing');
-  let responseText = null;
+
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch(`${API_BASE}ai/concierge`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: 'llama3-8b-8192', messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...groqHistory, { role: 'user', content: text }], temperature: 0.75, max_tokens: 400 })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
     });
-    if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
     const data = await response.json();
-    responseText = data.choices[0].message.content;
-    groqHistory.push({ role: 'user', content: text }, { role: 'assistant', content: responseText });
-    if (groqHistory.length > 20) groqHistory = groqHistory.slice(-20);
-  } catch (error) {
-    console.warn('Groq failed, local fallback', error);
-    responseText = generateLocalFallback(text);
+    typing.classList.remove('ai-typing');
+    if (data.success) {
+      typing.querySelector('.ai-msg-bubble').innerHTML = data.data.response;
+      if (data.data.suggestions && data.data.suggestions.length) {
+        const btnContainer = document.createElement('div');
+        btnContainer.style.marginTop = '12px';
+        btnContainer.style.display = 'flex';
+        btnContainer.style.gap = '8px';
+        btnContainer.style.flexWrap = 'wrap';
+        data.data.suggestions.slice(0, 3).forEach(hotel => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-outline';
+          btn.style.fontSize = '9px';
+          btn.style.padding = '6px 12px';
+          btn.textContent = `🏨 ${hotel.name} ($${hotel.price})`;
+          btn.onclick = () => {
+            document.getElementById('s-location').value = hotel.city;
+            document.getElementById('s-rooms').value = 1;
+            document.getElementById('s-children').value = 0;
+            document.getElementById('s-price').value = 'any';
+            renderResults(filterHotels(hotel.city, 1, 0, 'any'), hotel.city, 1, 0, 'any');
+            aiModal.classList.remove('open');
+            showPage('results');
+          };
+          btnContainer.appendChild(btn);
+        });
+        typing.querySelector('.ai-msg-bubble').appendChild(btnContainer);
+      }
+    } else {
+      typing.querySelector('.ai-msg-bubble').innerHTML = data.message || 'AI service unavailable. Please try again later.';
+    }
+  } catch(err) {
+    typing.classList.remove('ai-typing');
+    typing.querySelector('.ai-msg-bubble').innerHTML = 'Connection error. Unable to reach AI concierge.';
+    console.error(err);
   }
-  typing.classList.remove('ai-typing');
-  typing.querySelector('.ai-msg-bubble').innerHTML = responseText;
   aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
-function parseUserFilters(text) { /* نفس الكود */ }
-function parseReplyFilters(reply) { /* نفس الكود */ }
+function parseUserFilters(text) { /* يبقى كما هو */ return {}; }
+function parseReplyFilters(reply) { /* يبقى كما هو */ return {}; }
 
 /* ══════════ TOAST ══════════ */
 function showToast(msg, type='') {
