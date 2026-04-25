@@ -1,4 +1,4 @@
-/* AURUM — auth.js (متكامل مع api.php) */
+/* AURUM — auth.js (ديمو – يسمح فقط بحسابين محددين) */
 const API_BASE = '/api.php?route=';
 
 /* ── Theme ── */
@@ -25,7 +25,6 @@ const roleGuest = document.getElementById('roleGuest');
 const roleOwner = document.getElementById('roleOwner');
 const guestSection = document.getElementById('guestSection');
 const ownerSection = document.getElementById('ownerSection');
-
 function switchRole(role) {
   if (!roleGuest || !roleOwner || !guestSection || !ownerSection) return;
   if (role === 'guest') {
@@ -62,7 +61,6 @@ const goRegisterLink = document.getElementById('goRegisterLink');
 const goLoginLink = document.getElementById('goLoginLink');
 if (goRegisterLink) goRegisterLink.addEventListener('click', e => { e.preventDefault(); switchGuestTab('register'); });
 if (goLoginLink) goLoginLink.addEventListener('click', e => { e.preventDefault(); switchGuestTab('login'); });
-
 function switchGuestTab(tab) {
   if (!tabLogin || !tabRegister || !loginWrap || !registerWrap) return;
   if (tab === 'login') {
@@ -91,7 +89,6 @@ const goOwnerRegisterLink = document.getElementById('goOwnerRegisterLink');
 const goOwnerLoginLink = document.getElementById('goOwnerLoginLink');
 if (goOwnerRegisterLink) goOwnerRegisterLink.addEventListener('click', e => { e.preventDefault(); switchOwnerTab('register'); });
 if (goOwnerLoginLink) goOwnerLoginLink.addEventListener('click', e => { e.preventDefault(); switchOwnerTab('login'); });
-
 function switchOwnerTab(tab) {
   if (!ownerTabLogin || !ownerTabRegister || !ownerLoginWrap || !ownerRegWrap) return;
   if (tab === 'login') {
@@ -107,7 +104,7 @@ function switchOwnerTab(tab) {
   }
 }
 
-/* ── Helpers ── */
+/* ── Helpers (رسائل، أخطاء) ── */
 function setError(id, msg) {
   const el = document.getElementById(id);
   if (el) {
@@ -131,14 +128,8 @@ window.togglePw = function(id, btn) {
   if (btn) btn.style.opacity = show ? '1' : '0.5';
 };
 window.checkStrength = function(val) {
-  applyStrength(val, 'strengthFill', 'strengthLabel');
-};
-window.checkOwnerStrength = function(val) {
-  applyStrength(val, 'ownerStrFill', 'ownerStrLabel');
-};
-function applyStrength(val, fillId, labelId) {
-  const fill = document.getElementById(fillId);
-  const label = document.getElementById(labelId);
+  const fill = document.getElementById('strengthFill');
+  const label = document.getElementById('strengthLabel');
   if (!fill || !label) return;
   if (!val) { fill.style.width = '0%'; label.textContent = ''; return; }
   let score = 0;
@@ -152,10 +143,11 @@ function applyStrength(val, fillId, labelId) {
     { w:'70%', bg:'#f1c40f', txt:'Good' },
     { w:'100%',bg:'#2ecc71', txt:'Strong' },
   ];
-  const s = map[score - 1] || map[0];
+  const s = map[score-1] || map[0];
   fill.style.width = s.w; fill.style.background = s.bg;
   label.textContent = s.txt; label.style.color = s.bg;
-}
+};
+window.checkOwnerStrength = window.checkStrength;
 function showMsg(text, type) {
   let el = document.getElementById('authMsg');
   if (!el) {
@@ -199,27 +191,16 @@ function showSuccessOverlay(title, subtitle) {
   requestAnimationFrame(() => overlay.classList.add('show'));
 }
 
-/* ── Guest Login (معدل) ── */
+/* ── Guest Login (ديمو) ── */
 const loginBtn = document.getElementById('loginBtn');
 if (loginBtn) {
   loginBtn.addEventListener('click', async () => {
     const email = document.getElementById('loginEmail')?.value.trim() || '';
     const pass = document.getElementById('loginPass')?.value || '';
-    clearError('loginEmailErr'); clearError('loginPassErr');
-    if (!email || !email.includes('@')) {
-      setError('loginEmailErr', 'Please enter a valid email.');
-      highlightInvalid('loginEmail');
-      return;
-    }
-    if (!pass) {
-      setError('loginPassErr', 'Password is required.');
-      highlightInvalid('loginPass');
-      return;
-    }
+    if (!email || !pass) { showMsg('Please enter email and password', 'error'); return; }
     try {
       const res = await fetch(`${API_BASE}auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass })
       });
       const data = await res.json();
@@ -230,110 +211,67 @@ if (loginBtn) {
         setTimeout(() => window.location.href = 'index.html', 1500);
         return;
       }
-    } catch(err) { console.warn('API unavailable, demo mode', err); }
-    // Demo mode
+    } catch(e) { console.warn('API unavailable, demo mode'); }
     if (email === 'demo@aurum.com' && pass === 'demo123') {
-      const name = 'Demo User';
-      const initials = 'DU';
-      localStorage.setItem('aurum-user', JSON.stringify({ name, initials, email, role: 'guest' }));
+      localStorage.setItem('aurum-user', JSON.stringify({ name: 'Demo User', initials: 'DU', email, role: 'guest' }));
       localStorage.setItem('aurum-token', 'demo-token');
-      localStorage.setItem('aurum-theme', body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode');
       showSuccessOverlay('Welcome Demo User!', 'Redirecting...');
       setTimeout(() => window.location.href = 'index.html', 1500);
       return;
     }
-    showMsg('Invalid email or password. (Demo: demo@aurum.com / demo123)', 'error');
+    showMsg('Invalid credentials. Use demo@aurum.com / demo123 (Demo mode)', 'error');
   });
 }
 
-/* ── Guest Register (معدل) ── */
+/* ── Guest Register (معطل) ── */
 const registerBtn = document.getElementById('registerBtn');
 if (registerBtn) {
-  registerBtn.addEventListener('click', async () => {
-    const first = document.getElementById('regFirst')?.value.trim() || '';
-    const last = document.getElementById('regLast')?.value.trim() || '';
-    const email = document.getElementById('regEmail')?.value.trim() || '';
-    const pass = document.getElementById('regPass')?.value || '';
-    const pass2 = document.getElementById('regPass2')?.value || '';
-    const agreed = document.getElementById('agreeTerms')?.checked || false;
-    if (!first || !last) { showMsg('First and last name required', 'error'); return; }
-    if (!email || !email.includes('@')) { showMsg('Valid email required', 'error'); return; }
-    if (!pass || pass.length < 8) { showMsg('Password must be at least 8 characters', 'error'); return; }
-    if (pass !== pass2) { showMsg('Passwords do not match', 'error'); return; }
-    if (!agreed) { showMsg('You must agree to terms', 'error'); return; }
-    try {
-      const res = await fetch(`${API_BASE}auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `${first} ${last}`, email, password: pass, role: 'guest' })
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem('aurum-token', data.data.token);
-        localStorage.setItem('aurum-user', JSON.stringify(data.data.user));
-        showSuccessOverlay(`Welcome ${first}!`, 'Redirecting...');
-        setTimeout(() => window.location.href = 'index.html', 1500);
-        return;
-      }
-    } catch(e) { console.warn('Register API unavailable', e); }
+  registerBtn.addEventListener('click', () => {
     showMsg('Registration disabled in demo mode. Use demo@aurum.com / demo123', 'error');
   });
 }
 
-/* ── Owner Login (معدل) ── */
+/* ── Owner Login (ديمو) ── */
 const ownerLoginBtn = document.getElementById('ownerLoginBtn');
 if (ownerLoginBtn) {
   ownerLoginBtn.addEventListener('click', async () => {
     const email = document.getElementById('ownerLoginEmail')?.value.trim() || '';
     const pass = document.getElementById('ownerLoginPass')?.value || '';
-    clearError('ownerLoginEmailErr'); clearError('ownerLoginPassErr');
-    if (!email || !email.includes('@')) {
-      setError('ownerLoginEmailErr', 'Please enter a valid email.');
-      highlightInvalid('ownerLoginEmail');
-      return;
-    }
-    if (!pass) {
-      setError('ownerLoginPassErr', 'Password is required.');
-      highlightInvalid('ownerLoginPass');
-      return;
-    }
+    if (!email || !pass) { showMsg('Email and password required', 'error'); return; }
     try {
       const res = await fetch(`${API_BASE}auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass })
       });
       const data = await res.json();
       if (data.success && data.data.user.role === 'owner') {
         localStorage.setItem('aurum-token', data.data.token);
         localStorage.setItem('aurum-user', JSON.stringify(data.data.user));
-        showSuccessOverlay('Welcome back!', 'Accessing dashboard...');
+        showSuccessOverlay('Welcome back!', 'Redirecting...');
         setTimeout(() => window.location.href = 'owner-dashboard.html', 1500);
         return;
       }
-    } catch(err) { console.warn(err); }
+    } catch(e) { console.warn(e); }
     if (email === 'owner@aurum.com' && pass === 'owner123') {
-      const owner = { name: 'Demo Owner', initials: 'DO', email, role: 'owner', hotelName: 'Demo Hotel' };
-      localStorage.setItem('aurum-user', JSON.stringify(owner));
+      localStorage.setItem('aurum-user', JSON.stringify({ name: 'Demo Owner', initials: 'DO', email, role: 'owner', hotelName: 'Demo Hotel' }));
       localStorage.setItem('aurum-token', 'demo-owner-token');
-      localStorage.setItem('aurum-theme', body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode');
       showSuccessOverlay('Welcome Demo Owner!', 'Redirecting...');
       setTimeout(() => window.location.href = 'owner-dashboard.html', 1500);
       return;
     }
-    showMsg('Invalid owner credentials. (Demo: owner@aurum.com / owner123)', 'error');
+    showMsg('Invalid owner credentials. Demo: owner@aurum.com / owner123', 'error');
   });
 }
 
-/* ── Owner Register (معطل في الديمو) ── */
+/* ── Owner Register (معطل) ── */
 const ownerRegisterBtn = document.getElementById('ownerRegisterBtn');
 if (ownerRegisterBtn) {
   ownerRegisterBtn.addEventListener('click', () => {
-    showMsg('Owner registration is disabled in demo mode. Use owner@aurum.com / owner123', 'error');
+    showMsg('Owner registration disabled in demo mode', 'error');
   });
 }
 
-/* ── Social Login ── */
+/* ── Social Login (معطل) ── */
 window.socialLogin = function(provider) {
-  showMsg(`Login with ${provider} is disabled in demo mode. Use demo@aurum.com / demo123`, 'error');
+  showMsg(`Login with ${provider} disabled. Use demo@aurum.com / demo123`, 'error');
 };
