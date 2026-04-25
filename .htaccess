@@ -1,0 +1,21 @@
+RewriteEngine On
+
+# إعادة توجيه /api/xxx إلى api.php?route=xxx
+RewriteRule ^api/(.*)$ api.php?route=$1 [QSA,L]
+
+# منع الوصول إلى الملفات الحساسة
+<FilesMatch "\.(env|sql|md|log|gitignore)$">
+    Require all denied
+</FilesMatch>
+
+# منع الوصول المباشر لملفات PHP عدا api.php وauth.php وindex.php
+<FilesMatch "^(?!api|auth|index).*\.php$">
+    Require all denied
+</FilesMatch>
+
+# إضافة ترويسات أمان
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
