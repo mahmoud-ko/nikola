@@ -741,7 +741,7 @@ function generateLocalAIResponse(userMessage) {
 
 // ═══ Groq — direct connection (GitHub Pages has no backend) ═══
 const groqHistory = [];
-const GROQ_KEY = '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';
+const GROQ_KEY = 'GROQ_KEY_PLACEHOLDER';
 
 const SYSTEM_PROMPT = `You are AURUM's AI concierge — an elegant luxury hotel assistant.
 
