@@ -654,46 +654,89 @@ function appendMsg(text, role) {
 // ========== رد محلي ذكي (يعمل بدون اتصال بالخادم) ==========
 function generateLocalAIResponse(userMessage) {
   const msg = userMessage.toLowerCase();
-  let city = null;
-  let budget = null;
+  const isArabic = /[\u0600-\u06FF]/.test(userMessage);
+
+  // Detect city
   const cities = ['paris','dubai','tokyo','algiers','marrakech','istanbul','barcelona'];
-  for (let c of cities) {
-    if (msg.includes(c)) { city = c; break; }
-  }
-  const match = msg.match(/\d+/);
-  if (match) budget = parseInt(match[0]);
-  
-  // قائمة افتراضية بالفنادق
+  let city = cities.find(c => msg.includes(c)) || null;
+
+  // Detect budget — numbers near keywords
+  let budget = null;
+  const budgetMatch = msg.match(/(\d+)\s*(?:\$|dollars?|usd|dz|dzd|budget|night|per)/i)
+    || msg.match(/budget.*?(\d+)/i)
+    || msg.match(/(\d{2,5})/); // fallback: any 2-5 digit number
+  if (budgetMatch) budget = parseInt(budgetMatch[1]);
+
   const hotelsList = {
-    paris: [{ name:'Le Grand Hôtel', price:450, stars:5, desc:'Belle Époque grandeur' },
-            { name:'Hôtel de Crillon', price:980, stars:5, desc:'Palatial 18th-century landmark' }],
-    dubai: [{ name:'Burj Al Arab', price:1800, stars:5, desc:'Iconic sail-shaped' },
-            { name:'Atlantis The Palm', price:620, stars:5, desc:'Waterpark and restaurants' }],
-    tokyo: [{ name:'The Peninsula', price:720, stars:5, desc:'Eastern refinement' },
-            { name:'Mandarin Oriental', price:890, stars:5, desc:'Legendary spa' }],
-    algiers: [{ name:'Sofitel Algiers', price:220, stars:5, desc:'French elegance' },
-              { name:'El Djazair Hotel', price:180, stars:5, desc:'Colonial-era landmark' }],
-    marrakech: [{ name:'La Mamounia', price:750, stars:5, desc:'Moorish splendour' }],
-    istanbul: [{ name:'Four Seasons Bosphorus', price:680, stars:5, desc:'Ottoman palace' }],
-    barcelona: [{ name:'Hotel Arts Barcelona', price:480, stars:5, desc:'Beachfront masterpiece' }]
+    paris:     [{ name:'Le Grand Hôtel', price:450, stars:5, desc:'Belle Époque grandeur at the heart of Paris' },
+                { name:'Hôtel de Crillon', price:980, stars:5, desc:'Palatial 18th-century Parisian landmark' }],
+    dubai:     [{ name:'Burj Al Arab', price:1800, stars:5, desc:'The world\'s most iconic sail-shaped hotel' },
+                { name:'Atlantis The Palm', price:620, stars:5, desc:'Waterpark, restaurants and beach paradise' }],
+    tokyo:     [{ name:'The Peninsula', price:720, stars:5, desc:'Refined Eastern elegance in Shinjuku' }],
+    algiers:   [{ name:'Sofitel Algiers', price:220, stars:5, desc:'French elegance overlooking the bay' },
+                { name:'El Djazair Hotel', price:180, stars:5, desc:'Historic colonial-era landmark' }],
+    marrakech: [{ name:'La Mamounia', price:750, stars:5, desc:'Legendary Moorish splendour' }],
+    istanbul:  [{ name:'Four Seasons Bosphorus', price:680, stars:5, desc:'Ottoman palace on the Bosphorus waterfront' }],
+    barcelona: [{ name:'Hotel Arts Barcelona', price:480, stars:5, desc:'Stunning beachfront tower masterpiece' }]
   };
-  
-  if (city && hotelsList[city]) {
-    let filtered = hotelsList[city];
-    if (budget) filtered = filtered.filter(h => h.price <= budget);
-    if (filtered.length > 0) {
-      let top = filtered[0];
-      let reply = `Based on your request, I recommend ${top.name} in ${city.charAt(0).toUpperCase() + city.slice(1)}. It offers ${top.stars} stars from $${top.price}/night. ${top.desc}`;
-      if (filtered.length > 1) reply += ` Another great option is ${filtered[1].name} from $${filtered[1].price}/night.`;
-      return reply;
-    } else {
-      return `I couldn't find hotels in ${city} within your budget of $${budget}. Please consider increasing your budget or choosing another destination.`;
-    }
-  } else if (city) {
-    return `I'm sorry, I don't have information about hotels in ${city} yet. Would you like to try Paris, Dubai, Tokyo, Algiers, Marrakech, Istanbul, or Barcelona?`;
-  } else {
-    return "I'd love to help you find the perfect hotel! Please tell me which city you're interested in (Paris, Dubai, Tokyo, Algiers, Marrakech, Istanbul, Barcelona) and your approximate budget per night.";
+
+  const cityPriceRanges = {
+    paris:'$450–$980', dubai:'$620–$1800', tokyo:'$720', algiers:'$180–$220',
+    marrakech:'$750', istanbul:'$680', barcelona:'$480'
+  };
+
+  // Case 1: No city, no budget → ask both
+  if (!city && !budget) {
+    return isArabic
+      ? "أهلاً بك في AURUM! 🌟 أي وجهة تحلم بها؟ لدينا فنادق فاخرة في: باريس، دبي، طوكيو، الجزائر، مراكش، إسطنبول، وبرشلونة. وما هي ميزانيتك التقريبية لليلة؟"
+      : "Welcome to AURUM! ✨ Which destination are you dreaming of — Paris, Dubai, Tokyo, Algiers, Marrakech, Istanbul, or Barcelona? And what's your approximate nightly budget?";
   }
+
+  // Case 2: Budget but no city → tell them what fits
+  if (!city && budget) {
+    const affordable = Object.entries(cityPriceRanges)
+      .filter(([c]) => {
+        const hotels = hotelsList[c] || [];
+        return hotels.some(h => h.price <= budget);
+      })
+      .map(([c]) => c.charAt(0).toUpperCase() + c.slice(1));
+    if (affordable.length === 0) {
+      return isArabic
+        ? `ميزانيتك $${budget}/ليلة قد تكون محدودة لخياراتنا الحالية. هل يمكنك رفعها قليلاً؟ وأي مدينة تفضل؟`
+        : `With a $${budget}/night budget, options are limited. Could you stretch it a bit? Also, which city interests you?`;
+    }
+    return isArabic
+      ? `بميزانية $${budget}/ليلة، يمكنك الاستمتاع بفنادق فاخرة في: ${affordable.join('، ')}. أي مدينة تفضل؟`
+      : `With $${budget}/night, you can enjoy luxury in: ${affordable.join(', ')}. Which city calls to you?`;
+  }
+
+  // Case 3: City but no budget → show price range, ask budget
+  if (city && !budget) {
+    const range = cityPriceRanges[city] || 'varies';
+    return isArabic
+      ? `${city.charAt(0).toUpperCase() + city.slice(1)} وجهة رائعة! 🌍 فنادقنا الفاخرة هناك تتراوح بين ${range} في الليلة. ما هي ميزانيتك؟`
+      : `${city.charAt(0).toUpperCase() + city.slice(1)} is a wonderful choice! 🌍 Our luxury hotels there range from ${range}/night. What's your budget?`;
+  }
+
+  // Case 4: Both city and budget → recommend
+  const available = (hotelsList[city] || []).filter(h => h.price <= budget);
+  if (available.length === 0) {
+    const cheapest = (hotelsList[city] || []).sort((a,b) => a.price - b.price)[0];
+    const suggest = cheapest
+      ? (isArabic ? `أرخص خياراتنا في ${city} هو ${cheapest.name} بـ $${cheapest.price}/ليلة.` : `Our most affordable option in ${city} is ${cheapest.name} at $${cheapest.price}/night.`)
+      : '';
+    return isArabic
+      ? `لا توجد فنادق في ${city} ضمن ميزانية $${budget}. ${suggest} هل تريد تعديل ميزانيتك؟`
+      : `No hotels in ${city} within $${budget}/night. ${suggest} Would you like to adjust your budget?`;
+  }
+  const top = available[0];
+  let reply = `✨ I recommend **${top.name}** in ${city.charAt(0).toUpperCase() + city.slice(1)} — ${top.desc}, from $${top.price}/night (${top.stars}★).`;
+  if (available.length > 1) reply += ` Another excellent option is **${available[1].name}** at $${available[1].price}/night. Shall I check availability?`;
+  else reply += ` Would you like to book this hotel?`;
+  if (isArabic) {
+    reply = `✨ أنصحك بـ **${top.name}** في ${city} — ${top.desc}، من $${top.price} في الليلة (${top.stars}★). هل تريد الحجز؟`;
+  }
+  return reply;
 }
 
 async function sendAI() {
