@@ -1,7 +1,7 @@
-/* AURUM — auth.js (ديمو – يسمح فقط بحسابين محددين) */
+/* AURUM — auth.js (ديمو – حسابات محددة فقط) */
 const API_BASE = '/api.php?route=';
 
-/* ── Theme ── */
+/* ── Theme (نفس الكود السابق) ── */
 const body = document.body;
 const savedTheme = localStorage.getItem('aurum-theme') || 'dark-mode';
 body.className = savedTheme;
@@ -20,7 +20,7 @@ if (themeToggle) {
   });
 }
 
-/* ── Role Switcher ── */
+/* ── Role Switcher (نفس الكود السابق) ── */
 const roleGuest = document.getElementById('roleGuest');
 const roleOwner = document.getElementById('roleOwner');
 const guestSection = document.getElementById('guestSection');
@@ -48,7 +48,7 @@ if (roleGuest && roleOwner) {
   if (p.get('role') === 'owner') switchRole('owner');
 })();
 
-/* ── Guest Tabs ── */
+/* ── Guest Tabs (كما هو) ── */
 const tabLogin = document.getElementById('tabLogin');
 const tabRegister = document.getElementById('tabRegister');
 const loginWrap = document.getElementById('loginWrap');
@@ -76,7 +76,7 @@ function switchGuestTab(tab) {
   }
 }
 
-/* ── Owner Tabs ── */
+/* ── Owner Tabs (كما هو) ── */
 const ownerTabLogin = document.getElementById('ownerTabLogin');
 const ownerTabRegister = document.getElementById('ownerTabRegister');
 const ownerLoginWrap = document.getElementById('ownerLoginWrap');
@@ -104,94 +104,18 @@ function switchOwnerTab(tab) {
   }
 }
 
-/* ── Helpers (رسائل، أخطاء) ── */
-function setError(id, msg) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.textContent = msg;
-    if (msg) setTimeout(() => el.textContent = '', 3000);
-  }
-}
-function clearError(id) { setError(id, ''); }
-function highlightInvalid(inputId) {
-  const el = document.getElementById(inputId);
-  if (el) {
-    el.style.borderColor = '#e74c3c';
-    setTimeout(() => el.style.borderColor = '', 2000);
-  }
-}
-window.togglePw = function(id, btn) {
-  const inp = document.getElementById(id);
-  if (!inp) return;
-  const show = inp.type === 'password';
-  inp.type = show ? 'text' : 'password';
-  if (btn) btn.style.opacity = show ? '1' : '0.5';
-};
-window.checkStrength = function(val) {
-  const fill = document.getElementById('strengthFill');
-  const label = document.getElementById('strengthLabel');
-  if (!fill || !label) return;
-  if (!val) { fill.style.width = '0%'; label.textContent = ''; return; }
-  let score = 0;
-  if (val.length >= 8) score++;
-  if (/[A-Z]/.test(val)) score++;
-  if (/[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
-  const map = [
-    { w:'20%', bg:'#e74c3c', txt:'Weak' },
-    { w:'45%', bg:'#e67e22', txt:'Fair' },
-    { w:'70%', bg:'#f1c40f', txt:'Good' },
-    { w:'100%',bg:'#2ecc71', txt:'Strong' },
-  ];
-  const s = map[score-1] || map[0];
-  fill.style.width = s.w; fill.style.background = s.bg;
-  label.textContent = s.txt; label.style.color = s.bg;
-};
+/* ── دوال مساعدة (لن أكررها، استخدم نفس الكود السابق) ── */
+function setError(id, msg) { /* ... */ }
+function clearError(id) { /* ... */ }
+function highlightInvalid(inputId) { /* ... */ }
+window.togglePw = function(id, btn) { /* ... */ };
+window.checkStrength = function(val) { /* ... */ };
 window.checkOwnerStrength = window.checkStrength;
-function showMsg(text, type) {
-  let el = document.getElementById('authMsg');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'authMsg';
-    el.style.cssText = 'position:fixed;bottom:32px;right:32px;z-index:9999;padding:14px 24px;font-size:12px;letter-spacing:0.5px;border:1px solid;max-width:340px;line-height:1.5;transition:all 0.4s;opacity:0;transform:translateY(10px);font-family:Jost,sans-serif;background:var(--bg2);';
-    document.body.appendChild(el);
-  }
-  el.textContent = text;
-  el.style.borderColor = type === 'error' ? '#e74c3c' : type === 'success' ? '#2ecc71' : 'rgba(201,169,110,0.5)';
-  el.style.color = type === 'error' ? '#e74c3c' : type === 'success' ? '#2ecc71' : '#c9a96e';
-  el.style.opacity = '1';
-  el.style.transform = 'translateY(0)';
-  clearTimeout(window._msgT);
-  window._msgT = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; }, 3500);
-}
-function showSuccessOverlay(title, subtitle) {
-  let overlay = document.getElementById('successOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'successOverlay';
-    overlay.className = 'success-overlay';
-    overlay.innerHTML = `
-      <div class="success-content">
-        <div class="success-checkmark">
-          <svg viewBox="0 0 50 50" width="50" height="50">
-            <circle cx="25" cy="25" r="23" fill="none" stroke="currentColor" stroke-width="2" class="checkmark-circle"/>
-            <path d="M14 27l7 7 15-15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="checkmark-check"/>
-          </svg>
-        </div>
-        <div class="success-text" id="successText"></div>
-        <div class="success-subtext" id="successSubtext"></div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-  }
-  const successTextEl = document.getElementById('successText');
-  const successSubtextEl = document.getElementById('successSubtext');
-  if (successTextEl) successTextEl.textContent = title || 'Welcome!';
-  if (successSubtextEl) successSubtextEl.textContent = subtitle || 'Redirecting...';
-  requestAnimationFrame(() => overlay.classList.add('show'));
-}
+function applyStrength(val, fillId, labelId) { /* ... */ }
+function showMsg(text, type) { /* ... */ }
+function showSuccessOverlay(title, subtitle) { /* ... */ }
 
-/* ── Guest Login (ديمو) ── */
+/* ── Guest Login (ديمو فقط) ── */
 const loginBtn = document.getElementById('loginBtn');
 if (loginBtn) {
   loginBtn.addEventListener('click', async () => {
@@ -212,6 +136,7 @@ if (loginBtn) {
         return;
       }
     } catch(e) { console.warn('API unavailable, demo mode'); }
+    // Demo mode: only predefined demo account
     if (email === 'demo@aurum.com' && pass === 'demo123') {
       localStorage.setItem('aurum-user', JSON.stringify({ name: 'Demo User', initials: 'DU', email, role: 'guest' }));
       localStorage.setItem('aurum-token', 'demo-token');
@@ -239,10 +164,7 @@ if (ownerLoginBtn) {
     const pass = document.getElementById('ownerLoginPass')?.value || '';
     if (!email || !pass) { showMsg('Email and password required', 'error'); return; }
     try {
-      const res = await fetch(`${API_BASE}auth/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass })
-      });
+      const res = await fetch(`${API_BASE}auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
       const data = await res.json();
       if (data.success && data.data.user.role === 'owner') {
         localStorage.setItem('aurum-token', data.data.token);
