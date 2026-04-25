@@ -739,6 +739,9 @@ function generateLocalAIResponse(userMessage) {
   return reply;
 }
 
+// ═══ Groq conversation history (per session, never stored) ═══
+const groqHistory = [];
+
 async function sendAI() {
   const text = aiInput.value.trim();
   if (!text) return;
@@ -747,29 +750,25 @@ async function sendAI() {
   const typing = appendMsg('', 'bot');
   typing.classList.add('ai-typing');
 
-  // محاولة الاتصال بالباك إند أولاً
   let responseText = null;
   try {
     const response = await fetch(`${API_BASE}ai/concierge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ message: text, history: groqHistory })
     });
     const data = await response.json();
     if (data.success && data.data.response) {
       responseText = data.data.response;
-      // إذا كان هناك اقتراحات فنادق من الباك إند نضيفها
+      groqHistory.push({ role: 'user', content: text });
+      groqHistory.push({ role: 'assistant', content: responseText });
       if (data.data.suggestions && data.data.suggestions.length) {
         const btnContainer = document.createElement('div');
-        btnContainer.style.marginTop = '12px';
-        btnContainer.style.display = 'flex';
-        btnContainer.style.gap = '8px';
-        btnContainer.style.flexWrap = 'wrap';
+        btnContainer.style.cssText = 'margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;';
         data.data.suggestions.slice(0,3).forEach(hotel => {
           const btn = document.createElement('button');
           btn.className = 'btn-outline';
-          btn.style.fontSize = '9px';
-          btn.style.padding = '6px 12px';
+          btn.style.cssText = 'font-size:9px;padding:6px 12px;';
           btn.textContent = `🏨 ${hotel.name} ($${hotel.price})`;
           btn.onclick = () => {
             document.getElementById('s-location').value = hotel.city;
@@ -788,10 +787,10 @@ async function sendAI() {
       throw new Error('Invalid response');
     }
   } catch(err) {
-    console.warn('Backend AI failed, using local fallback', err);
+    console.warn('Backend AI failed:', err);
     responseText = generateLocalAIResponse(text);
   }
-  
+
   typing.classList.remove('ai-typing');
   typing.querySelector('.ai-msg-bubble').innerHTML = responseText || "I'm having trouble connecting right now. Please try again later.";
   aiMessages.scrollTop = aiMessages.scrollHeight;
