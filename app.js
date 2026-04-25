@@ -739,8 +739,32 @@ function generateLocalAIResponse(userMessage) {
   return reply;
 }
 
-// ═══ Groq conversation history (per session, never stored) ═══
+// ═══ Groq — direct connection (GitHub Pages has no backend) ═══
 const groqHistory = [];
+const GROQ_KEY = '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';
+
+const SYSTEM_PROMPT = `You are AURUM's AI concierge — an elegant luxury hotel assistant.
+
+Available hotels:
+- Le Grand Hôtel (Paris): $450/night, 5★, rated 4.9 — Belle Époque grandeur
+- Hôtel de Crillon (Paris): $980/night, 5★, rated 4.95 — Palatial 18th-century landmark
+- Burj Al Arab (Dubai): $1800/night, 5★, rated 4.85 — Iconic sail-shaped hotel
+- Atlantis The Palm (Dubai): $620/night, 5★, rated 4.7 — Waterpark and restaurants
+- The Peninsula (Tokyo): $720/night, 5★, rated 4.9 — Eastern refinement
+- Sofitel Algiers (Algiers): $220/night, 5★, rated 4.72 — French elegance
+- El Djazair Hotel (Algiers): $180/night, 5★, rated 4.65 — Colonial-era landmark
+- Four Seasons Bosphorus (Istanbul): $680/night, 5★, rated 4.91 — Ottoman palace
+- La Mamounia (Marrakech): $750/night, 5★, rated 4.94 — Moorish splendour
+- Hotel Arts Barcelona (Barcelona): $480/night, 5★, rated 4.75 — Beachfront masterpiece
+
+Rules:
+- Have a REAL conversation. Read the chat history and respond naturally.
+- If no city mentioned yet, ask which city they prefer.
+- If no budget mentioned yet, ask their approximate nightly budget.
+- Once you know city and budget, recommend 1-2 hotels from the list ONLY.
+- NEVER recommend hotels not in the list.
+- Detect language: if guest writes in Arabic reply in Arabic, otherwise English.
+- Be warm, cultured, concise (3-5 sentences). End with a follow-up question.`;
 
 async function sendAI() {
   const text = aiInput.value.trim();
@@ -752,42 +776,30 @@ async function sendAI() {
 
   let responseText = null;
   try {
-    const response = await fetch(`${API_BASE}ai/concierge`, {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: groqHistory })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + GROQ_KEY
+      },
+      body: JSON.stringify({
+        model: 'llama3-8b-8192',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...groqHistory,
+          { role: 'user', content: text }
+        ],
+        temperature: 0.75,
+        max_tokens: 400
+      })
     });
+    if (!response.ok) throw new Error('Groq error: ' + response.status);
     const data = await response.json();
-    if (data.success && data.data.response) {
-      responseText = data.data.response;
-      groqHistory.push({ role: 'user', content: text });
-      groqHistory.push({ role: 'assistant', content: responseText });
-      if (data.data.suggestions && data.data.suggestions.length) {
-        const btnContainer = document.createElement('div');
-        btnContainer.style.cssText = 'margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;';
-        data.data.suggestions.slice(0,3).forEach(hotel => {
-          const btn = document.createElement('button');
-          btn.className = 'btn-outline';
-          btn.style.cssText = 'font-size:9px;padding:6px 12px;';
-          btn.textContent = `🏨 ${hotel.name} ($${hotel.price})`;
-          btn.onclick = () => {
-            document.getElementById('s-location').value = hotel.city;
-            document.getElementById('s-rooms').value = 1;
-            document.getElementById('s-children').value = 0;
-            document.getElementById('s-price').value = 'any';
-            renderResults(filterHotels(hotel.city, 1, 0, 'any'), hotel.city, 1, 0, 'any');
-            aiModal.classList.remove('open');
-            showPage('results');
-          };
-          btnContainer.appendChild(btn);
-        });
-        typing.querySelector('.ai-msg-bubble').appendChild(btnContainer);
-      }
-    } else {
-      throw new Error('Invalid response');
-    }
+    responseText = data.choices[0].message.content;
+    groqHistory.push({ role: 'user', content: text });
+    groqHistory.push({ role: 'assistant', content: responseText });
   } catch(err) {
-    console.warn('Backend AI failed:', err);
+    console.warn('Groq failed:', err);
     responseText = generateLocalAIResponse(text);
   }
 
