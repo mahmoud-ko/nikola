@@ -5,7 +5,7 @@
    والذي يحوي GROQ_API_KEY كمتغير بيئة آمن.
    يمكنك نشره مجاناً على Cloudflare Workers أو أي خدمة حوسبة边缘.
 ═══════════════════════════════════════════════ */
-const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev'; الحقيقي
+const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev';الحقيقي
 
 /* باقي الإعدادات كما هي مع الحفاظ على الرد المحلي الذكي (fallback) */
 const API_BASE = '/api.php?route=';
