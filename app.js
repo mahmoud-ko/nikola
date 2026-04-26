@@ -1,5 +1,8 @@
-/* AURUM — app.js (آمن، لا يحتوي على مفتاح) */
-const API_BASE = '/api.php?route=';   // يمكن تغييره إلى رابط الاستضافة البعيدة لاحقاً
+/* ═══════════════════════════════════════════════
+   AURUM — app.js (مع تصحيح AI Concierge)
+═══════════════════════════════════════════════ */
+
+const API_BASE = '/api.php?route=';   // المسار الصحيح لملف api.php
 
 /* ══════════ THEME ══════════ */
 const body = document.body;
@@ -101,12 +104,9 @@ async function loadHotelsFromAPI() {
 
 function useLocalHotelDatabase() {
     hotelDatabase = [
-        { id:1, name:'Le Grand Hôtel', city:'Paris', country:'France', stars:5, price:450, rating:4.9, reviews:1284, desc:'Belle Époque grandeur', amenities:['Wi-Fi','Spa','Restaurant','Concierge','Bar'], initial:'LG', color:'#1a1208', maxChildren:4, rooms:3, photos: makePhotos('LG','#1a1208','#2a1f0a','#180e04') },
-        { id:2, name:'Hôtel de Crillon', city:'Paris', country:'France', stars:5, price:980, rating:4.95, reviews:876, desc:'Palatial 18th-century landmark', amenities:['Wi-Fi','Pool','Spa','Restaurant','Concierge'], initial:'HC', color:'#14100a', maxChildren:2, rooms:5, photos: makePhotos('HC','#14100a','#201808','#0e0c06') },
-        { id:3, name:'Burj Al Arab', city:'Dubai', country:'UAE', stars:5, price:1800, rating:4.85, reviews:2341, desc:'Iconic sail-shaped', amenities:['Pool','Spa','Restaurant','Bar','Transfer','Concierge'], initial:'BA', color:'#0a1218', maxChildren:3, rooms:2, photos: makePhotos('BA','#0a1218','#0d1e2e','#06101a') },
-        { id:4, name:'Atlantis The Palm', city:'Dubai', country:'UAE', stars:5, price:620, rating:4.7, reviews:5612, desc:'Waterpark and restaurants', amenities:['Pool','Wi-Fi','Restaurant','Bar','Gym','Beach'], initial:'AT', color:'#0a1015', maxChildren:6, rooms:5, photos: makePhotos('AT','#0a1015','#0e1a22','#081218') },
-        { id:5, name:'Sofitel Algiers', city:'Algiers', country:'Algeria', stars:5, price:220, rating:4.72, reviews:642, desc:'French elegance', amenities:['Pool','Spa','Restaurant','Bar','Wi-Fi'], initial:'SA', color:'#0a1a0e', maxChildren:3, rooms:4, photos: makePhotos('SA','#0a1a0e','#102414','#06100a') },
-        { id:6, name:'El Djazair Hotel', city:'Algiers', country:'Algeria', stars:5, price:180, rating:4.65, reviews:430, desc:'Colonial-era landmark', amenities:['Pool','Restaurant','Bar','Concierge','Wi-Fi'], initial:'EJ', color:'#0e1a0a', maxChildren:4, rooms:3, photos: makePhotos('EJ','#0e1a0a','#152210','#0a1808') }
+        { id:1, name:'Le Grand Hôtel', city:'Paris', country:'France', stars:5, price:450, rating:4.9, reviews:1284, desc:'Belle Époque grandeur at the heart of Paris...', amenities:['Wi-Fi','Spa','Restaurant','Concierge','Bar'], initial:'LG', color:'#1a1208', maxChildren:4, rooms:3, photos: makePhotos('LG','#1a1208','#2a1f0a','#180e04') },
+        { id:2, name:'Hôtel de Crillon', city:'Paris', country:'France', stars:5, price:980, rating:4.95, reviews:876, desc:'A palatial 18th-century landmark...', amenities:['Wi-Fi','Pool','Spa','Restaurant','Concierge'], initial:'HC', color:'#14100a', maxChildren:2, rooms:5, photos: makePhotos('HC','#14100a','#201808','#0e0c06') },
+        { id:3, name:'Burj Al Arab', city:'Dubai', country:'UAE', stars:5, price:1800, rating:4.85, reviews:2341, desc:'The world\'s most iconic hotel...', amenities:['Pool','Spa','Restaurant','Bar','Transfer','Concierge'], initial:'BA', color:'#0a1218', maxChildren:3, rooms:2, photos: makePhotos('BA','#0a1218','#0d1e2e','#06101a') },
     ];
     renderResults(filterHotels('Paris', 1, 0, 'any'), 'Paris', 1, 0, 'any');
 }
@@ -134,7 +134,7 @@ function makePhotos(initial, c1, c2, c3) {
   };
 }
 
-/* ══════════ CUSTOM SEARCH DROPDOWNS (نفس الكود السابق) ══════════ */
+/* ══════════ CUSTOM SEARCH DROPDOWNS ══════════ */
 function initCustomSelect(id, hiddenSelectId) {
   const container = document.getElementById(id);
   const hiddenSel = document.getElementById(hiddenSelectId);
@@ -300,7 +300,7 @@ document.querySelectorAll('.featured-card').forEach(card => {
   });
 });
 
-/* ══════════ GALLERY MODAL (نفس الكود السابق) ══════════ */
+/* ══════════ GALLERY MODAL ══════════ */
 let galHotel   = null;
 let galTab     = 'hotel';
 let galIndex   = 0;
@@ -412,7 +412,7 @@ function closeGallery() {
   if (existing) { existing.classList.remove('show'); setTimeout(() => { try { existing.remove(); } catch(e){} }, 220); }
 }
 
-/* ══════════ BOOKING MODAL (نفس الكود السابق) ══════════ */
+/* ══════════ BOOKING MODAL ══════════ */
 const bookingModal   = document.getElementById('bookingModal');
 const bookingBackdrop= document.getElementById('bookingBackdrop');
 
@@ -452,6 +452,7 @@ function showSideSigninTip(button, hotel, msg) {
   tip.className = 'signin-tip signin-tip--alert';
   tip.innerHTML = `<div class="signin-tip-body"><div class="signin-tip-msg">${message}</div></div>`;
   document.body.appendChild(tip);
+
   const rect = button.getBoundingClientRect();
   const preferOffset = 20;
   tip.style.position = 'absolute';
@@ -472,6 +473,7 @@ function showSideSigninTip(button, hotel, msg) {
   tip.style.top = `${Math.round(top)}px`;
 
   requestAnimationFrame(() => { tip.classList.add('show'); });
+
   tip.style.cursor = 'pointer';
   const onClickTip = () => { window.location.href = 'auth.html'; };
   tip.addEventListener('click', onClickTip);
@@ -479,6 +481,7 @@ function showSideSigninTip(button, hotel, msg) {
   let dismissTimer = setTimeout(() => cleanupTip(), 1500);
   function onScroll() { cleanupTip(); }
   function onResize() { repositionTip(); }
+
   window.addEventListener('scroll', onScroll, { passive:true });
   window.addEventListener('resize', onResize);
 
@@ -520,6 +523,7 @@ function openInlineSignin(onSuccess) {
   overlay.style.position = 'fixed'; overlay.style.inset = '0'; overlay.style.display = 'flex';
   overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center'; overlay.style.zIndex = 10000;
   overlay.style.background = 'rgba(0,0,0,0.45)';
+
   overlay.innerHTML = `
     <div style="width:360px;max-width:92%;padding:20px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow);">
       <h3 style="margin:0 0 8px;color:var(--white);font-family:'Cormorant Garamond',serif;">Sign In</h3>
@@ -531,7 +535,9 @@ function openInlineSignin(onSuccess) {
       </div>
     </div>
   `;
+
   document.body.appendChild(overlay);
+
   document.getElementById('inlineCancel').addEventListener('click', () => overlay.remove());
   document.getElementById('inlineSubmit').addEventListener('click', () => {
     const name = document.getElementById('inlineName').value.trim();
@@ -586,9 +592,17 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
   const total    = Math.round(nights * rate * rooms);
   if (token && hotelId) {
     try {
-      const res = await fetch(`${API_BASE}bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ hotel_id: parseInt(hotelId), check_in: cin, check_out: cout, rooms, guests: rooms * 2, total_price: total }) });
+      const res = await fetch(`${API_BASE}bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ hotel_id: parseInt(hotelId), check_in: cin, check_out: cout, rooms, guests: rooms * 2, total_price: total })
+      });
       const data = await res.json();
-      if (data.success) { closeBooking(); showToast(`✔ Booking #${data.data.booking_id} confirmed!`, 'success'); return; }
+      if (data.success) {
+        closeBooking();
+        showToast(`✔ Booking #${data.data.booking_id} confirmed!`, 'success');
+        return;
+      }
     } catch(e) { console.warn('Booking API failed, showing confirmation anyway', e); }
   }
   closeBooking();
@@ -604,11 +618,15 @@ if (payConfirm) {
     const cvc = document.getElementById('payCvc').value.trim();
     if (!name || !number || !exp || !cvc) { showToast('Please complete payment details.','error'); return; }
     payConfirm.disabled = true; payConfirm.textContent = 'Processing…';
-    setTimeout(() => { payConfirm.disabled = false; payConfirm.textContent = 'Pay & Confirm'; closeBooking(); showToast('✔ Payment accepted — Reservation confirmed!','success'); }, 1200);
+    setTimeout(() => {
+      payConfirm.disabled = false; payConfirm.textContent = 'Pay & Confirm';
+      closeBooking();
+      showToast('✔ Payment accepted — Reservation confirmed!','success');
+    }, 1200);
   });
 }
 
-/* ══════════ AI CONCIERGE (آمن، يتصل بالباك إند) ══════════ */
+/* ══════════ AI CONCIERGE (المعدل بالكامل مع fallback محلي) ══════════ */
 const aiModal    = document.getElementById('aiModal');
 const aiMessages = document.getElementById('aiMessages');
 const aiInput    = document.getElementById('aiInput');
@@ -633,62 +651,171 @@ function appendMsg(text, role) {
   return div;
 }
 
+// ========== رد محلي ذكي (يعمل بدون اتصال بالخادم) ==========
+function generateLocalAIResponse(userMessage) {
+  const msg = userMessage.toLowerCase();
+  let city = null;
+  let budget = null;
+  const cities = ['paris','dubai','tokyo','algiers','marrakech','istanbul','barcelona'];
+  for (let c of cities) {
+    if (msg.includes(c)) { city = c; break; }
+  }
+  const match = msg.match(/\d+/);
+  if (match) budget = parseInt(match[0]);
+  
+  // قائمة افتراضية بالفنادق
+  const hotelsList = {
+    paris: [{ name:'Le Grand Hôtel', price:450, stars:5, desc:'Belle Époque grandeur' },
+            { name:'Hôtel de Crillon', price:980, stars:5, desc:'Palatial 18th-century landmark' }],
+    dubai: [{ name:'Burj Al Arab', price:1800, stars:5, desc:'Iconic sail-shaped' },
+            { name:'Atlantis The Palm', price:620, stars:5, desc:'Waterpark and restaurants' }],
+    tokyo: [{ name:'The Peninsula', price:720, stars:5, desc:'Eastern refinement' },
+            { name:'Mandarin Oriental', price:890, stars:5, desc:'Legendary spa' }],
+    algiers: [{ name:'Sofitel Algiers', price:220, stars:5, desc:'French elegance' },
+              { name:'El Djazair Hotel', price:180, stars:5, desc:'Colonial-era landmark' }],
+    marrakech: [{ name:'La Mamounia', price:750, stars:5, desc:'Moorish splendour' }],
+    istanbul: [{ name:'Four Seasons Bosphorus', price:680, stars:5, desc:'Ottoman palace' }],
+    barcelona: [{ name:'Hotel Arts Barcelona', price:480, stars:5, desc:'Beachfront masterpiece' }]
+  };
+  
+  if (city && hotelsList[city]) {
+    let filtered = hotelsList[city];
+    if (budget) filtered = filtered.filter(h => h.price <= budget);
+    if (filtered.length > 0) {
+      let top = filtered[0];
+      let reply = `Based on your request, I recommend ${top.name} in ${city.charAt(0).toUpperCase() + city.slice(1)}. It offers ${top.stars} stars from $${top.price}/night. ${top.desc}`;
+      if (filtered.length > 1) reply += ` Another great option is ${filtered[1].name} from $${filtered[1].price}/night.`;
+      return reply;
+    } else {
+      return `I couldn't find hotels in ${city} within your budget of $${budget}. Please consider increasing your budget or choosing another destination.`;
+    }
+  } else if (city) {
+    return `I'm sorry, I don't have information about hotels in ${city} yet. Would you like to try Paris, Dubai, Tokyo, Algiers, Marrakech, Istanbul, or Barcelona?`;
+  } else {
+    return "I'd love to help you find the perfect hotel! Please tell me which city you're interested in (Paris, Dubai, Tokyo, Algiers, Marrakech, Istanbul, Barcelona) and your approximate budget per night.";
+  }
+}
+
+/* ══ Cloudflare Worker — المفتاح مخفي على السيرفر ══ */
+const WORKER_URL = 'https://aurum-ai.wallamahmoud96.workers.dev';
+
+// حفظ تاريخ المحادثة
+const chatHistory = [];
+
+async function callGroqAPI(userMessage) {
+  chatHistory.push({ role: 'user', content: userMessage });
+
+  const response = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: userMessage,
+      history: chatHistory.slice(0, -1) // إرسال التاريخ بدون الرسالة الأخيرة
+    })
+  });
+
+  if (!response.ok) throw new Error(`Worker error: ${response.status}`);
+  const data = await response.json();
+  if (!data.success) throw new Error(data.error);
+  const reply = data.response;
+  chatHistory.push({ role: 'assistant', content: reply });
+  return reply;
+}
+
+function addHotelButtons(container, responseText) {
+  const hotelData = [
+    { name:'Le Grand Hôtel',        city:'paris',     price:450  },
+    { name:'Hôtel de Crillon',      city:'paris',     price:980  },
+    { name:'Burj Al Arab',          city:'dubai',     price:1800 },
+    { name:'Atlantis The Palm',     city:'dubai',     price:620  },
+    { name:'The Peninsula',         city:'tokyo',     price:720  },
+    { name:'Sofitel Algiers',       city:'algiers',   price:220  },
+    { name:'El Djazair Hotel',      city:'algiers',   price:180  },
+    { name:'Four Seasons Bosphorus',city:'istanbul',  price:680  },
+    { name:'La Mamounia',           city:'marrakech', price:750  },
+    { name:'Hotel Arts Barcelona',  city:'barcelona', price:480  },
+  ];
+  const mentioned = hotelData.filter(h => responseText.toLowerCase().includes(h.name.toLowerCase().split(' ')[0]));
+  if (!mentioned.length) return;
+  const btnContainer = document.createElement('div');
+  btnContainer.style.cssText = 'margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;';
+  mentioned.slice(0, 3).forEach(hotel => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-outline';
+    btn.style.cssText = 'font-size:11px;padding:6px 14px;';
+    btn.textContent = `🏨 ${hotel.name} ($${hotel.price})`;
+    btn.onclick = () => {
+      document.getElementById('s-location').value = hotel.city;
+      document.getElementById('s-rooms').value = 1;
+      document.getElementById('s-children').value = 0;
+      document.getElementById('s-price').value = 'any';
+      renderResults(filterHotels(hotel.city, 1, 0, 'any'), hotel.city, 1, 0, 'any');
+      aiModal.classList.remove('open');
+      showPage('results');
+    };
+    btnContainer.appendChild(btn);
+  });
+  container.appendChild(btnContainer);
+}
+
 async function sendAI() {
   const text = aiInput.value.trim();
   if (!text) return;
   appendMsg(text, 'user');
   aiInput.value = '';
-  const typing = appendMsg('', 'bot');
+  const typing = appendMsg('⋯', 'bot');
   typing.classList.add('ai-typing');
 
+  let responseText = null;
   try {
-    const response = await fetch(`${API_BASE}ai/concierge`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
-    });
-    const data = await response.json();
-    typing.classList.remove('ai-typing');
-    if (data.success) {
-      typing.querySelector('.ai-msg-bubble').innerHTML = data.data.response;
-      if (data.data.suggestions && data.data.suggestions.length) {
-        const btnContainer = document.createElement('div');
-        btnContainer.style.marginTop = '12px';
-        btnContainer.style.display = 'flex';
-        btnContainer.style.gap = '8px';
-        btnContainer.style.flexWrap = 'wrap';
-        data.data.suggestions.slice(0, 3).forEach(hotel => {
-          const btn = document.createElement('button');
-          btn.className = 'btn-outline';
-          btn.style.fontSize = '9px';
-          btn.style.padding = '6px 12px';
-          btn.textContent = `🏨 ${hotel.name} ($${hotel.price})`;
-          btn.onclick = () => {
-            document.getElementById('s-location').value = hotel.city;
-            document.getElementById('s-rooms').value = 1;
-            document.getElementById('s-children').value = 0;
-            document.getElementById('s-price').value = 'any';
-            renderResults(filterHotels(hotel.city, 1, 0, 'any'), hotel.city, 1, 0, 'any');
-            aiModal.classList.remove('open');
-            showPage('results');
-          };
-          btnContainer.appendChild(btn);
-        });
-        typing.querySelector('.ai-msg-bubble').appendChild(btnContainer);
-      }
-    } else {
-      typing.querySelector('.ai-msg-bubble').innerHTML = data.message || 'AI service unavailable. Please try again later.';
-    }
+    responseText = await callGroqAPI(text);
   } catch(err) {
-    typing.classList.remove('ai-typing');
-    typing.querySelector('.ai-msg-bubble').innerHTML = 'Connection error. Unable to reach AI concierge.';
-    console.error(err);
+    console.warn('Groq API failed, using local fallback:', err);
+    responseText = generateLocalAIResponse(text);
   }
+
+  typing.classList.remove('ai-typing');
+  const bubble = typing.querySelector('.ai-msg-bubble');
+  bubble.innerHTML = responseText || "I'm having trouble connecting right now. Please try again.";
+  addHotelButtons(bubble, responseText || '');
   aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
-function parseUserFilters(text) { /* يبقى كما هو */ return {}; }
-function parseReplyFilters(reply) { /* يبقى كما هو */ return {}; }
+function parseUserFilters(text) { // تبقى موجودة لكن لا تستخدم حالياً
+  const t = text.toLowerCase();
+  let rooms = 1, children = 0, maxPrice = null;
+  const roomMatch = t.match(/(\d+)\s*(?:room|bedroom|suite)/);
+  if (roomMatch) rooms = parseInt(roomMatch[1]);
+  const childMatch = t.match(/(\d+)\s*(?:child|kid|children)/);
+  if (childMatch) children = parseInt(childMatch[1]);
+  if (/\b(under|below|less than|max|up to|around|about)\s*\$?(\d+)/.test(t)) {
+    const m = t.match(/\b(under|below|less than|max|up to|around|about)\s*\$?(\d+)/);
+    if (m) maxPrice = parseInt(m[2]);
+  } else if (/\$(\d+)/.test(t)) {
+    const m = t.match(/\$(\d+)/);
+    if (m) maxPrice = parseInt(m[1]);
+  } else if (/\b(budget|cheap|affordable|inexpensive|low cost|low-price)/.test(t)) {
+    maxPrice = 300;
+  }
+  const cities = ['paris','dubai','tokyo','new york','london','barcelona','algiers','oran','istanbul','marrakech'];
+  let city = null;
+  for (const c of cities) { if (t.includes(c)) { city = c; break; } }
+  return { city, rooms, children, maxPrice };
+}
+
+function parseReplyFilters(reply) { // تبقى موجودة
+  const r = reply.toLowerCase();
+  let price = null, rooms = null, children = null, city = null;
+  const priceMatches = [...r.matchAll(/\$(\d+)/g)].map(m => parseInt(m[1]));
+  if (priceMatches.length) price = Math.max(...priceMatches);
+  const roomMatch = r.match(/(\d+)\s*(?:room|bedroom)/);
+  if (roomMatch) rooms = parseInt(roomMatch[1]);
+  const childMatch = r.match(/(\d+)\s*(?:child|kid|children)/);
+  if (childMatch) children = parseInt(childMatch[1]);
+  const cities = ['paris','dubai','tokyo','new york','london','barcelona','algiers','oran','istanbul','marrakech'];
+  for (const c of cities) { if (r.includes(c)) { city = c; break; } }
+  return { city, price, rooms, children };
+}
 
 /* ══════════ TOAST ══════════ */
 function showToast(msg, type='') {
@@ -701,7 +828,12 @@ function showToast(msg, type='') {
 
 /* ══════════ SCROLL ANIM ══════════ */
 const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.style.animation='fadeUp 0.6s ease forwards'; obs.unobserve(e.target); } });
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.animation='fadeUp 0.6s ease forwards';
+      obs.unobserve(e.target);
+    }
+  });
 }, { threshold:0.1 });
 document.querySelectorAll('.featured-card, .why-feat').forEach(el => { el.style.opacity='0'; obs.observe(el); });
 
