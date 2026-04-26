@@ -1,30 +1,19 @@
-name: Inject Groq Key
+name: Deploy and run app
 
 on:
   push:
-    branches: [main]
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+    branches: [ main ]
 
 jobs:
-  inject:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Inject API key into app.js
-        run: |
-          sed -i "s|GROQ_KEY_PLACEHOLDER|${{ secrets.GROQ_API_KEY }}|g" app.js
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add app.js
-          git diff --staged --quiet || git commit -m "Inject API key"
-          git push
+          node-version: '20'
+      - run: npm install
+      - name: Run app with secret
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: node app.js
