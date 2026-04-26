@@ -601,27 +601,10 @@ async function sendAI() {
   aiInput.value = '';
   const typing = appendMsg('', 'bot');
   typing.classList.add('ai-typing');
-
-  let responseText = null;
-  try {
-    const res = await fetch(AI_API_BASE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: conversationHistory.slice(-4) })
-    });
-    const data = await res.json();
-    if (data.success && data.response) {
-      responseText = data.response;
-      conversationHistory.push({ role: 'user', content: text, timestamp: Date.now() });
-      conversationHistory.push({ role: 'assistant', content: responseText, timestamp: Date.now() });
-      if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
-    } else {
-      throw new Error('Worker response invalid');
-    }
-  } catch(err) {
-    console.warn('Worker failed, using smart local fallback:', err);
-    responseText = smartLocalResponse(text);
-  }
+  
+  // الرد المحلي الذكي (بدون أي اتصال خارجي)
+  const responseText = smartLocalResponse(text);
+  
   typing.classList.remove('ai-typing');
   typing.querySelector('.ai-msg-bubble').innerHTML = responseText;
   aiMessages.scrollTop = aiMessages.scrollHeight;
