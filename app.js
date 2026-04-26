@@ -770,7 +770,7 @@ async function sendAI() {
   try {
     responseText = await callGroqAPI(text);
   } catch(err) {
-    console.warn('Groq API failed, using local fallback:', err);
+    console.warn("Worker failed, using local fallback:", err);
     responseText = generateLocalAIResponse(text);
   }
 
