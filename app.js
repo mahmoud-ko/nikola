@@ -1,12 +1,10 @@
+/* AURUM — app.js (نهائي مع Worker وإصلاح الفنادق) */
+const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev';
+const API_BASE = '/api.php?route=';
+
 /* ═══════════════════════════════════════════════
-   AURUM — app.js (مع Worker AI)
+   THEME & SESSION & NAV (نفس الكود السابق)
 ═══════════════════════════════════════════════ */
-
-// ========== الروابط الأساسية ==========
-const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev';  // Cloudflare Worker للذكاء الاصطناعي
-const API_BASE = '/api.php?route=';                                // الباك إند PHP للفنادق والحجوزات
-
-/* ══════════ THEME ══════════ */
 const body = document.body;
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon   = document.getElementById('themeIcon');
@@ -27,7 +25,6 @@ function setThemeIcon(mode) {
   themeIcon.textContent = mode === 'dark-mode' ? '☀' : '☾';
 }
 
-/* ══════════ SESSION ══════════ */
 const navUser       = document.getElementById('navUser');
 const navUserLogged = document.getElementById('navUserLogged');
 const navAvatar     = document.getElementById('navAvatar');
@@ -49,7 +46,6 @@ document.getElementById("navSignout")?.addEventListener("click", () => {
   showToast('You have been signed out.');
 });
 
-/* ══════════ NAV ══════════ */
 const navbar   = document.getElementById('navbar');
 const pages    = document.querySelectorAll('.page');
 const navLinks = document.querySelectorAll('.nav-link');
@@ -84,36 +80,48 @@ navLinks.forEach(link => {
   });
 });
 
-/* ══════════ HOTEL DATABASE (من API) ══════════ */
+/* ═══════════════════════════════════════════════
+   HOTEL DATABASE (مع fallback محلي لـ GitHub Pages)
+═══════════════════════════════════════════════ */
 let hotelDatabase = [];
 
 async function loadHotelsFromAPI() {
-  try {
-    const res = await fetch(`${API_BASE}hotels`);
-    const data = await res.json();
-    if (data.success) {
-      hotelDatabase = data.data;
-      renderResults(filterHotels('Paris', 1, 0, 'any'), 'Paris', 1, 0, 'any');
-    } else {
-      console.warn('API hotels failed, using local fallback');
-      useLocalHotelDatabase();
+    if (window.location.hostname === 'mahmoud-ko.github.io' || window.location.hostname === '127.0.0.1' && !(await isBackendAvailable())) {
+        useLocalHotelDatabase();
+        return;
     }
-  } catch(e) {
-    console.error('Error loading hotels from API', e);
-    useLocalHotelDatabase();
-  }
+    try {
+        const res = await fetch(`${API_BASE}hotels`);
+        const data = await res.json();
+        if (data.success) {
+            hotelDatabase = data.data;
+            renderResults(filterHotels('Paris', 1, 0, 'any'), 'Paris', 1, 0, 'any');
+        } else {
+            useLocalHotelDatabase();
+        }
+    } catch(e) {
+        console.warn('API hotels failed, using local fallback');
+        useLocalHotelDatabase();
+    }
+}
+
+async function isBackendAvailable() {
+    try {
+        const res = await fetch(`${API_BASE}hotels`, { method: 'HEAD', timeout: 500 });
+        return res.ok;
+    } catch(e) { return false; }
 }
 
 function useLocalHotelDatabase() {
-  hotelDatabase = [
-    { id:1, name:'Le Grand Hôtel', city:'Paris', country:'France', stars:5, price:450, rating:4.9, reviews:1284, desc:'Belle Époque grandeur at the heart of Paris...', amenities:['Wi-Fi','Spa','Restaurant','Concierge','Bar'], initial:'LG', color:'#1a1208', maxChildren:4, rooms:3, photos: makePhotos('LG','#1a1208','#2a1f0a','#180e04') },
-    { id:2, name:'Hôtel de Crillon', city:'Paris', country:'France', stars:5, price:980, rating:4.95, reviews:876, desc:'A palatial 18th-century landmark...', amenities:['Wi-Fi','Pool','Spa','Restaurant','Concierge'], initial:'HC', color:'#14100a', maxChildren:2, rooms:5, photos: makePhotos('HC','#14100a','#201808','#0e0c06') },
-    { id:3, name:'Burj Al Arab', city:'Dubai', country:'UAE', stars:5, price:1800, rating:4.85, reviews:2341, desc:'The world\'s most iconic hotel...', amenities:['Pool','Spa','Restaurant','Bar','Transfer','Concierge'], initial:'BA', color:'#0a1218', maxChildren:3, rooms:2, photos: makePhotos('BA','#0a1218','#0d1e2e','#06101a') },
-    { id:4, name:'Atlantis The Palm', city:'Dubai', country:'UAE', stars:5, price:620, rating:4.7, reviews:5612, desc:'Waterpark and restaurants...', amenities:['Pool','Wi-Fi','Restaurant','Bar','Gym','Beach'], initial:'AT', color:'#0a1015', maxChildren:6, rooms:5, photos: makePhotos('AT','#0a1015','#0e1a22','#081218') },
-    { id:5, name:'Sofitel Algiers', city:'Algiers', country:'Algeria', stars:5, price:220, rating:4.72, reviews:642, desc:'French elegance...', amenities:['Pool','Spa','Restaurant','Bar','Wi-Fi'], initial:'SA', color:'#0a1a0e', maxChildren:3, rooms:4, photos: makePhotos('SA','#0a1a0e','#102414','#06100a') },
-    { id:6, name:'El Djazair Hotel', city:'Algiers', country:'Algeria', stars:5, price:180, rating:4.65, reviews:430, desc:'Colonial-era landmark...', amenities:['Pool','Restaurant','Bar','Concierge','Wi-Fi'], initial:'EJ', color:'#0e1a0a', maxChildren:4, rooms:3, photos: makePhotos('EJ','#0e1a0a','#152210','#0a1808') }
-  ];
-  renderResults(filterHotels('Paris', 1, 0, 'any'), 'Paris', 1, 0, 'any');
+    hotelDatabase = [
+        { id:1, name:'Le Grand Hôtel', city:'Paris', country:'France', stars:5, price:450, rating:4.9, reviews:1284, desc:'Belle Époque grandeur at the heart of Paris...', amenities:['Wi-Fi','Spa','Restaurant','Concierge','Bar'], initial:'LG', color:'#1a1208', maxChildren:4, rooms:3, photos: makePhotos('LG','#1a1208','#2a1f0a','#180e04') },
+        { id:2, name:'Hôtel de Crillon', city:'Paris', country:'France', stars:5, price:980, rating:4.95, reviews:876, desc:'A palatial 18th-century landmark...', amenities:['Wi-Fi','Pool','Spa','Restaurant','Concierge'], initial:'HC', color:'#14100a', maxChildren:2, rooms:5, photos: makePhotos('HC','#14100a','#201808','#0e0c06') },
+        { id:3, name:'Burj Al Arab', city:'Dubai', country:'UAE', stars:5, price:1800, rating:4.85, reviews:2341, desc:'The world\'s most iconic hotel...', amenities:['Pool','Spa','Restaurant','Bar','Transfer','Concierge'], initial:'BA', color:'#0a1218', maxChildren:3, rooms:2, photos: makePhotos('BA','#0a1218','#0d1e2e','#06101a') },
+        { id:4, name:'Atlantis The Palm', city:'Dubai', country:'UAE', stars:5, price:620, rating:4.7, reviews:5612, desc:'Waterpark and restaurants...', amenities:['Pool','Wi-Fi','Restaurant','Bar','Gym','Beach'], initial:'AT', color:'#0a1015', maxChildren:6, rooms:5, photos: makePhotos('AT','#0a1015','#0e1a22','#081218') },
+        { id:5, name:'Sofitel Algiers', city:'Algiers', country:'Algeria', stars:5, price:220, rating:4.72, reviews:642, desc:'French elegance...', amenities:['Pool','Spa','Restaurant','Bar','Wi-Fi'], initial:'SA', color:'#0a1a0e', maxChildren:3, rooms:4, photos: makePhotos('SA','#0a1a0e','#102414','#06100a') },
+        { id:6, name:'El Djazair Hotel', city:'Algiers', country:'Algeria', stars:5, price:180, rating:4.65, reviews:430, desc:'Colonial-era landmark...', amenities:['Pool','Restaurant','Bar','Concierge','Wi-Fi'], initial:'EJ', color:'#0e1a0a', maxChildren:4, rooms:3, photos: makePhotos('EJ','#0e1a0a','#152210','#0a1808') }
+    ];
+    renderResults(filterHotels('Paris', 1, 0, 'any'), 'Paris', 1, 0, 'any');
 }
 
 function makePhotos(initial, c1, c2, c3) {
@@ -139,7 +147,9 @@ function makePhotos(initial, c1, c2, c3) {
   };
 }
 
-/* ══════════ CUSTOM SEARCH DROPDOWNS ══════════ */
+/* ═══════════════════════════════════════════════
+   CUSTOM SEARCH DROPDOWNS
+═══════════════════════════════════════════════ */
 function initCustomSelect(id, hiddenSelectId) {
   const container = document.getElementById(id);
   const hiddenSel = document.getElementById(hiddenSelectId);
@@ -181,7 +191,9 @@ initCustomSelect('roomsSelect', 's-rooms');
 initCustomSelect('childrenSelect', 's-children');
 initCustomSelect('budgetSelect', 's-price');
 
-/* ══════════ SEARCH ══════════ */
+/* ═══════════════════════════════════════════════
+   SEARCH & RESULTS
+═══════════════════════════════════════════════ */
 document.getElementById('searchBtn').addEventListener('click', () => {
   const location = document.getElementById('s-location').value.trim();
   const rooms    = parseInt(document.getElementById('s-rooms').value);
@@ -273,7 +285,6 @@ function createHotelCard(hotel, delay=0) {
   return card;
 }
 
-/* Featured clicks */
 document.querySelectorAll('.featured-card').forEach(card => {
   card.addEventListener('click', () => {
     const dest = card.dataset.dest;
@@ -283,7 +294,9 @@ document.querySelectorAll('.featured-card').forEach(card => {
   });
 });
 
-/* ══════════ GALLERY MODAL ══════════ */
+/* ═══════════════════════════════════════════════
+   GALLERY MODAL (اختصار)
+═══════════════════════════════════════════════ */
 let galHotel = null, galTab = 'hotel', galIndex = 0;
 const galleryModal = document.getElementById('galleryModal');
 const galleryBackdrop = document.getElementById('galleryBackdrop');
@@ -352,7 +365,9 @@ galleryClose.addEventListener('click', closeGallery);
 galleryBackdrop.addEventListener('click', closeGallery);
 function closeGallery() { galleryModal.classList.remove('open'); document.body.style.overflow = ''; const existing = document.getElementById('signinTip'); if (existing) { existing.classList.remove('show'); setTimeout(() => existing.remove(), 220); } }
 
-/* ══════════ BOOKING MODAL ══════════ */
+/* ═══════════════════════════════════════════════
+   BOOKING MODAL
+═══════════════════════════════════════════════ */
 const bookingModal = document.getElementById('bookingModal');
 const bookingBackdrop = document.getElementById('bookingBackdrop');
 function openBookingModal(hotel) {
@@ -391,15 +406,14 @@ function showSideSigninTip(button, hotel, msg) {
   requestAnimationFrame(() => tip.classList.add('show'));
   tip.style.cursor = 'pointer';
   tip.onclick = () => window.location.href = 'auth.html';
-  let timer = setTimeout(() => tip.remove(), 1500);
-  window.addEventListener('scroll', () => tip.remove(), {once:true});
+  setTimeout(() => tip.remove(), 1500);
 }
 function openInlineSignin(onSuccess) {
   if (document.getElementById('inlineSignin')) return;
   const overlay = document.createElement('div');
   overlay.id = 'inlineSignin';
   overlay.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10000;background:rgba(0,0,0,0.45)';
-  overlay.innerHTML = `<div style="width:360px;max-width:92%;padding:20px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow);"><h3 style="margin:0 0 8px;color:var(--white);font-family:\'Cormorant Garamond\',serif;">Sign In</h3><p style="margin:0 0 12px;color:var(--text-m);font-size:13px;">Enter your name to sign in and continue.</p><input id="inlineName" placeholder="Full name" style="width:100%;padding:10px;margin-bottom:8px;background:var(--bg3);color:var(--text);outline:none;" /><div style="display:flex;gap:8px;justify-content:flex-end;"><button id="inlineCancel" class="btn-outline">Cancel</button><button id="inlineSubmit" class="btn-gold">Sign In</button></div></div>`;
+  overlay.innerHTML = `<div style="width:360px;max-width:92%;padding:20px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow);"><h3 style="margin:0 0 8px;color:var(--white);font-family:'Cormorant Garamond',serif;">Sign In</h3><p style="margin:0 0 12px;color:var(--text-m);font-size:13px;">Enter your name to sign in and continue.</p><input id="inlineName" placeholder="Full name" style="width:100%;padding:10px;margin-bottom:8px;background:var(--bg3);color:var(--text);outline:none;" /><div style="display:flex;gap:8px;justify-content:flex-end;"><button id="inlineCancel" class="btn-outline">Cancel</button><button id="inlineSubmit" class="btn-gold">Sign In</button></div></div>`;
   document.body.appendChild(overlay);
   document.getElementById('inlineCancel').onclick = () => overlay.remove();
   document.getElementById('inlineSubmit').onclick = () => {
@@ -474,7 +488,9 @@ if (payConfirm) {
   });
 }
 
-/* ══════════ AI CONCIERGE (Cloudflare Worker) ══════════ */
+/* ═══════════════════════════════════════════════
+   AI CONCIERGE (اتصال بـ Worker + رد محلي)
+═══════════════════════════════════════════════ */
 const aiModal = document.getElementById('aiModal');
 const aiMessages = document.getElementById('aiMessages');
 const aiInput = document.getElementById('aiInput');
@@ -492,7 +508,7 @@ function appendMsg(text, role) {
   return div;
 }
 
-// رد محلي احتياطي (إذا فشل Worker)
+// رد محلي احتياطي (عند فشل Worker)
 function generateLocalAIResponse(userMessage) {
   const msg = userMessage.toLowerCase();
   const isArabic = /[\u0600-\u06FF]/.test(userMessage);
@@ -556,10 +572,12 @@ async function sendAI() {
   aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
-function parseUserFilters(text) { /* placeholder – not actively used */ return {}; }
+function parseUserFilters(text) { return {}; }
 function parseReplyFilters(reply) { return {}; }
 
-/* ══════════ TOAST ══════════ */
+/* ═══════════════════════════════════════════════
+   TOAST & SCROLL ANIMATIONS
+═══════════════════════════════════════════════ */
 function showToast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -567,14 +585,14 @@ function showToast(msg, type='') {
   clearTimeout(window._tt);
   window._tt = setTimeout(() => t.classList.remove('show'), 4000);
 }
-
-/* ══════════ SCROLL ANIM ══════════ */
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.style.animation = 'fadeUp 0.6s ease forwards'; obs.unobserve(e.target); } });
 }, { threshold:0.1 });
 document.querySelectorAll('.featured-card, .why-feat').forEach(el => { el.style.opacity = '0'; obs.observe(el); });
 
-/* ══════════ INIT ══════════ */
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
   loadHotelsFromAPI();
   try {
@@ -595,7 +613,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ══════════ OWNER ROLE NAV ══════════ */
+/* ═══════════════════════════════════════════════
+   OWNER ROLE NAV
+═══════════════════════════════════════════════ */
 (function() {
   const u = JSON.parse(localStorage.getItem('aurum-user') || 'null');
   if (u && u.role === 'owner') {
