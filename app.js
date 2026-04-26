@@ -1,5 +1,6 @@
 /* AURUM — app.js (رد محلي ذكي مع Worker احتياطي) */
-const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev';
+// هذا الـ Worker الجديد سيحتوي على مفتاح GROQ_API_KEY سري
+const AI_API_BASE = 'https://your-new-worker.your-subdomain.workers.dev';
 const API_BASE = '/api.php?route=';
 
 /* ═══════════════════════════════════════════════
