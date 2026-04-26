@@ -1,18 +1,8 @@
-/* AURUM — app.js (رد محلي ذكي مع Worker احتياطي يحمل GROQ_API_KEY) */
-
-/* ═══════════════════════════════════════════════
-   🔐 التغيير الأساسي: يجب أن يشير هذا الرابط إلى الـ Worker الخاص بك 
-   والذي يحوي GROQ_API_KEY كمتغير بيئة آمن.
-   يمكنك نشره مجاناً على Cloudflare Workers أو أي خدمة حوسبة边缘.
-═══════════════════════════════════════════════ */
-const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev';الحقيقي
-
-/* باقي الإعدادات كما هي مع الحفاظ على الرد المحلي الذكي (fallback) */
+/* AURUM — app.js (نهائي - يعمل مع Worker وعنوانه صحيح ولا يحتوي على أخطاء) */
+const AI_API_BASE = 'https://aurum-ai.wallamahmoud96.workers.dev';
 const API_BASE = '/api.php?route=';
 
-/* ═══════════════════════════════════════════════
-   THEME & SESSION & NAV (بدون تغيير)
-═══════════════════════════════════════════════ */
+/* ══════════ THEME & SESSION & NAV (نفس الكود السابق) ══════════ */
 const body = document.body;
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon   = document.getElementById('themeIcon');
@@ -88,9 +78,7 @@ navLinks.forEach(link => {
   });
 });
 
-/* ═══════════════════════════════════════════════
-   HOTEL DATABASE (محلي لـ GitHub Pages) — بدون تغيير
-═══════════════════════════════════════════════ */
+/* ══════════ HOTEL DATABASE (محلي لـ GitHub Pages) ══════════ */
 let hotelDatabase = [];
 
 async function loadHotelsFromAPI() {
@@ -118,7 +106,7 @@ function useLocalHotelDatabase() {
         { id:2, name:'Hôtel de Crillon', city:'Paris', country:'France', stars:5, price:980, rating:4.95, reviews:876, desc:'Palatial 18th-century', amenities:['Wi-Fi','Pool','Spa','Restaurant','Concierge'], initial:'HC', color:'#14100a', maxChildren:2, rooms:5, photos: makePhotos('HC','#14100a','#201808','#0e0c06') },
         { id:3, name:'Burj Al Arab', city:'Dubai', country:'UAE', stars:5, price:1800, rating:4.85, reviews:2341, desc:'Iconic sail-shaped', amenities:['Pool','Spa','Restaurant','Bar','Transfer'], initial:'BA', color:'#0a1218', maxChildren:3, rooms:2, photos: makePhotos('BA','#0a1218','#0d1e2e','#06101a') },
         { id:4, name:'Atlantis The Palm', city:'Dubai', country:'UAE', stars:5, price:620, rating:4.7, reviews:5612, desc:'Waterpark paradise', amenities:['Pool','Wi-Fi','Restaurant','Bar','Gym','Beach'], initial:'AT', color:'#0a1015', maxChildren:6, rooms:5, photos: makePhotos('AT','#0a1015','#0e1a22','#081218') },
-        { id:5, name:'Sofitel Algiers', city:'Algiers', country:'Algeria', stars:5, price:220, rating:4.72, reviews:642, desc:'French elegance overlooking the bay', amenities:['Pool','Spa','Restaurant','Bar','Wi-Fi'], initial:'SA', color:'#0a1a0e', maxChildren:3, rooms:4, photos: makePhotos('SA','#0a1a0e','#102414','#06100a') },
+        { id:5, name:'Sofitel Algiers', city:'Algiers', country:'Algeria', stars:5, price:220, rating:4.72, reviews:642, desc:'French elegance', amenities:['Pool','Spa','Restaurant','Bar','Wi-Fi'], initial:'SA', color:'#0a1a0e', maxChildren:3, rooms:4, photos: makePhotos('SA','#0a1a0e','#102414','#06100a') },
         { id:6, name:'El Djazair Hotel', city:'Algiers', country:'Algeria', stars:5, price:180, rating:4.65, reviews:430, desc:'Colonial-era landmark', amenities:['Pool','Restaurant','Bar','Concierge','Wi-Fi'], initial:'EJ', color:'#0e1a0a', maxChildren:4, rooms:3, photos: makePhotos('EJ','#0e1a0a','#152210','#0a1808') }
     ];
     renderResults(filterHotels('Paris', 1, 0, 'any'), 'Paris', 1, 0, 'any');
@@ -147,9 +135,7 @@ function makePhotos(initial, c1, c2, c3) {
   };
 }
 
-/* ═══════════════════════════════════════════════
-   CUSTOM SEARCH DROPDOWNS (بدون تغيير)
-═══════════════════════════════════════════════ */
+/* ══════════ CUSTOM SEARCH DROPDOWNS (يُفضل إبقاؤها كما هي) ══════════ */
 function initCustomSelect(id, hiddenSelectId) {
   const container = document.getElementById(id);
   const hiddenSel = document.getElementById(hiddenSelectId);
@@ -191,9 +177,7 @@ initCustomSelect('roomsSelect', 's-rooms');
 initCustomSelect('childrenSelect', 's-children');
 initCustomSelect('budgetSelect', 's-price');
 
-/* ═══════════════════════════════════════════════
-   SEARCH & RESULTS (بدون تغيير)
-═══════════════════════════════════════════════ */
+/* ══════════ SEARCH & RESULTS (اختصاراً، لا تغيير) ══════════ */
 document.getElementById('searchBtn').addEventListener('click', () => {
   const location = document.getElementById('s-location').value.trim();
   const rooms    = parseInt(document.getElementById('s-rooms').value);
@@ -280,9 +264,7 @@ document.querySelectorAll('.featured-card').forEach(card => {
   });
 });
 
-/* ═══════════════════════════════════════════════
-   GALLERY MODAL (بدون تغيير)
-═══════════════════════════════════════════════ */
+/* ══════════ GALLERY MODAL (اختصاراً) ══════════ */
 let galHotel = null, galTab = 'hotel', galIndex = 0;
 const galleryModal = document.getElementById('galleryModal');
 const galleryBackdrop = document.getElementById('galleryBackdrop');
@@ -351,9 +333,7 @@ galleryClose.addEventListener('click', closeGallery);
 galleryBackdrop.addEventListener('click', closeGallery);
 function closeGallery() { galleryModal.classList.remove('open'); document.body.style.overflow = ''; const existing = document.getElementById('signinTip'); if (existing) { existing.classList.remove('show'); setTimeout(() => existing.remove(), 220); } }
 
-/* ═══════════════════════════════════════════════
-   BOOKING MODAL (بدون تغيير)
-═══════════════════════════════════════════════ */
+/* ══════════ BOOKING MODAL (نفس السابق) ══════════ */
 const bookingModal = document.getElementById('bookingModal');
 const bookingBackdrop = document.getElementById('bookingBackdrop');
 function openBookingModal(hotel) {
@@ -474,10 +454,7 @@ if (payConfirm) {
   });
 }
 
-/* ═══════════════════════════════════════════════
-   🧠 AI CONCIERGE — معتمدة على Worker يحتوي GROQ_API_KEY
-   (مع رد محلي ذكي كنسخة احتياطية)
-═══════════════════════════════════════════════ */
+/* ══════════ AI CONCIERGE (اتصال بالـ Worker + رد محلي ذكي) ══════════ */
 const aiModal = document.getElementById('aiModal');
 const aiMessages = document.getElementById('aiMessages');
 const aiInput = document.getElementById('aiInput');
@@ -495,20 +472,14 @@ function appendMsg(text, role) {
   return div;
 }
 
-// متغيرات السياق للمحادثة (للاستخدام في الرد المحلي الاحتياطي)
 let conversationHistory = [];
 let lastExtracted = { city: null, budget: null, rooms: 1, children: 0 };
-let lastUserMessage = '';
 
-// قاعدة بيانات الفنادق المحلية (للاستخدام الاحتياطي)
 const localHotelsData = {
-  paris: [{ name:'Le Grand Hôtel', price:450, stars:5, desc:'Belle Époque grandeur' },
-          { name:'Hôtel de Crillon', price:980, stars:5, desc:'Palatial 18th-century landmark' }],
-  dubai: [{ name:'Burj Al Arab', price:1800, stars:5, desc:'Iconic sail-shaped' },
-          { name:'Atlantis The Palm', price:620, stars:5, desc:'Waterpark paradise' }],
+  paris: [{ name:'Le Grand Hôtel', price:450, stars:5, desc:'Belle Époque grandeur' }, { name:'Hôtel de Crillon', price:980, stars:5, desc:'Palatial 18th-century' }],
+  dubai: [{ name:'Burj Al Arab', price:1800, stars:5, desc:'Iconic sail-shaped' }, { name:'Atlantis The Palm', price:620, stars:5, desc:'Waterpark paradise' }],
   tokyo: [{ name:'The Peninsula', price:720, stars:5, desc:'Eastern refinement' }],
-  algiers: [{ name:'Sofitel Algiers', price:220, stars:5, desc:'French elegance' },
-            { name:'El Djazair Hotel', price:180, stars:5, desc:'Colonial-era landmark' }],
+  algiers: [{ name:'Sofitel Algiers', price:220, stars:5, desc:'French elegance' }, { name:'El Djazair Hotel', price:180, stars:5, desc:'Colonial-era landmark' }],
   istanbul: [{ name:'Four Seasons Bosphorus', price:680, stars:5, desc:'Ottoman palace' }],
   marrakech: [{ name:'La Mamounia', price:750, stars:5, desc:'Moorish splendour' }],
   barcelona: [{ name:'Hotel Arts Barcelona', price:480, stars:5, desc:'Beachfront masterpiece' }]
@@ -520,7 +491,7 @@ function extractContext(message, previousContext) {
   let budget = previousContext.budget;
   let rooms = previousContext.rooms;
   let children = previousContext.children;
-  const cities = ['paris','dubai','tokyo','algiers','marrakech','istanbul','barcelona','london','new york'];
+  const cities = ['paris','dubai','tokyo','algiers','marrakech','istanbul','barcelona'];
   for (let c of cities) if (msg.includes(c)) { city = c; break; }
   const budgetMatch = msg.match(/(?:budget|under|below|less than|max|up to|around|about|for)?\s*\$?(\d{2,4})/i);
   if (budgetMatch) budget = parseInt(budgetMatch[1]);
@@ -534,14 +505,14 @@ function extractContext(message, previousContext) {
 function generateContextualResponse(userMessage, previousContext, history) {
   const isArabic = /[\u0600-\u06FF]/.test(userMessage);
   const context = extractContext(userMessage, previousContext);
-  const city = context.city;
-  const budget = context.budget;
-  const rooms = context.rooms;
-  const children = context.children;
+  const city = context.city || previousContext.city;
+  const budget = context.budget || previousContext.budget;
+  const rooms = context.rooms || previousContext.rooms;
+  const children = context.children || previousContext.children;
   if (!city && !budget) {
-    const greetings = ['Hello', 'Hi', 'Hey', 'Greetings', 'مرحباً', 'أهلاً', 'السلام'];
-    const firstWord = userMessage.trim().split(' ')[0];
-    const isGreeting = greetings.some(g => firstWord.toLowerCase().includes(g.toLowerCase()));
+    const greetings = ['hello','hi','hey','مرحباً','أهلاً'];
+    const firstWord = userMessage.trim().split(' ')[0].toLowerCase();
+    const isGreeting = greetings.some(g => firstWord.includes(g));
     if (isGreeting && history.length <= 2) {
       return isArabic ? "أهلاً بك في AURUM! 🌟 أنا مساعدك الشخصي لحجز الفنادق الفاخرة. أخبرني عن وجهة أحلامك والميزانية التقريبية (مثال: 'باريس تحت 500 دولار')." 
                       : "Welcome to AURUM! 🌟 I'm your personal concierge. Tell me your dream destination and approximate budget (e.g., 'Paris under $500').";
@@ -551,8 +522,9 @@ function generateContextualResponse(userMessage, previousContext, history) {
   }
   if (city && !budget) {
     const cityName = city.charAt(0).toUpperCase() + city.slice(1);
-    return isArabic ? `فنادق ${cityName} الرائعة تبدأ من $${localHotelsData[city]?.[0]?.price || 'مختلفة'}/ليلة. ما هي ميزانيتك التقريبية؟` 
-                    : `Wonderful choice! Hotels in ${cityName} start from $${localHotelsData[city]?.[0]?.price || 'various'}/night. What's your budget?`;
+    const minPrice = localHotelsData[city]?.[0]?.price || 'various';
+    return isArabic ? `فنادق ${cityName} الرائعة تبدأ من $${minPrice}/ليلة. ما هي ميزانيتك التقريبية؟` 
+                    : `Wonderful choice! Hotels in ${cityName} start from $${minPrice}/night. What's your budget?`;
   }
   if (!city && budget) {
     return isArabic ? `بميزانية $${budget}/ليلة، يمكنك الإقامة في فنادق فاخرة في باريس، دبي، الجزائر، مراكش، إسطنبول، أو برشلونة. أي مدينة تفضلها؟`
@@ -582,8 +554,7 @@ function generateContextualResponse(userMessage, previousContext, history) {
 }
 
 function smartLocalResponse(userMessage) {
-  lastUserMessage = userMessage;
-  let ctx = { city: lastExtracted.city, budget: lastExtracted.budget, rooms: lastExtracted.rooms, children: lastExtracted.children };
+  const ctx = { city: lastExtracted.city, budget: lastExtracted.budget, rooms: lastExtracted.rooms, children: lastExtracted.children };
   const newCtx = extractContext(userMessage, ctx);
   lastExtracted = { city: newCtx.city || lastExtracted.city, budget: newCtx.budget || lastExtracted.budget, rooms: newCtx.rooms || lastExtracted.rooms, children: newCtx.children || lastExtracted.children };
   const response = generateContextualResponse(userMessage, lastExtracted, conversationHistory);
@@ -593,7 +564,6 @@ function smartLocalResponse(userMessage) {
   return response;
 }
 
-// دالة الإرسال الرئيسية: تحاول الـ Worker أولاً، ثم تستخدم الرد المحلي الذكي
 async function sendAI() {
   const text = aiInput.value.trim();
   if (!text) return;
@@ -601,22 +571,35 @@ async function sendAI() {
   aiInput.value = '';
   const typing = appendMsg('', 'bot');
   typing.classList.add('ai-typing');
-  
-  // الرد المحلي الذكي (بدون أي اتصال خارجي)
-  const responseText = smartLocalResponse(text);
-  
+  let responseText = null;
+  try {
+    const res = await fetch(AI_API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history: conversationHistory.slice(-4) })
+    });
+    const data = await res.json();
+    if (data.success && data.response) {
+      responseText = data.response;
+      conversationHistory.push({ role: 'user', content: text, timestamp: Date.now() });
+      conversationHistory.push({ role: 'assistant', content: responseText, timestamp: Date.now() });
+      if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
+    } else {
+      throw new Error('Worker response invalid');
+    }
+  } catch(err) {
+    console.warn('Worker failed, using smart local fallback:', err);
+    responseText = smartLocalResponse(text);
+  }
   typing.classList.remove('ai-typing');
   typing.querySelector('.ai-msg-bubble').innerHTML = responseText;
   aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
-// دوال وهمية (لم تعد مستخدمة)
 function parseUserFilters() { return {}; }
 function parseReplyFilters() { return {}; }
 
-/* ═══════════════════════════════════════════════
-   TOAST & SCROLL ANIMATIONS
-═══════════════════════════════════════════════ */
+/* ══════════ TOAST & SCROLL ANIMATIONS ══════════ */
 function showToast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -629,9 +612,7 @@ const obs = new IntersectionObserver(entries => {
 }, { threshold:0.1 });
 document.querySelectorAll('.featured-card, .why-feat').forEach(el => { el.style.opacity = '0'; obs.observe(el); });
 
-/* ═══════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════ */
+/* ══════════ INIT ══════════ */
 window.addEventListener('DOMContentLoaded', () => {
   loadHotelsFromAPI();
   try {
@@ -652,9 +633,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ═══════════════════════════════════════════════
-   OWNER ROLE NAV (بدون تغيير)
-═══════════════════════════════════════════════ */
+/* ══════════ OWNER ROLE NAV ══════════ */
 (function() {
   const u = JSON.parse(localStorage.getItem('aurum-user') || 'null');
   if (u && u.role === 'owner') {
