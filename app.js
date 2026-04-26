@@ -1,10 +1,17 @@
-/* AURUM — app.js (رد محلي ذكي مع Worker احتياطي) */
-// هذا الـ Worker الجديد سيحتوي على مفتاح GROQ_API_KEY سري
-const AI_API_BASE = 'https://your-new-worker.your-subdomain.workers.dev';
+/* AURUM — app.js (رد محلي ذكي مع Worker احتياطي يحمل GROQ_API_KEY) */
+
+/* ═══════════════════════════════════════════════
+   🔐 التغيير الأساسي: يجب أن يشير هذا الرابط إلى الـ Worker الخاص بك 
+   والذي يحوي GROQ_API_KEY كمتغير بيئة آمن.
+   يمكنك نشره مجاناً على Cloudflare Workers أو أي خدمة حوسبة边缘.
+═══════════════════════════════════════════════ */
+const AI_API_BASE = 'https://your-groq-proxy.workers.dev';  // ⬅️ غيّره إلى عنوان الـ Worker الحقيقي
+
+/* باقي الإعدادات كما هي مع الحفاظ على الرد المحلي الذكي (fallback) */
 const API_BASE = '/api.php?route=';
 
 /* ═══════════════════════════════════════════════
-   THEME & SESSION & NAV (كما هو، لا تغيير)
+   THEME & SESSION & NAV (بدون تغيير)
 ═══════════════════════════════════════════════ */
 const body = document.body;
 const themeToggle = document.getElementById('themeToggle');
@@ -82,7 +89,7 @@ navLinks.forEach(link => {
 });
 
 /* ═══════════════════════════════════════════════
-   HOTEL DATABASE (محلي لـ GitHub Pages)
+   HOTEL DATABASE (محلي لـ GitHub Pages) — بدون تغيير
 ═══════════════════════════════════════════════ */
 let hotelDatabase = [];
 
@@ -141,7 +148,7 @@ function makePhotos(initial, c1, c2, c3) {
 }
 
 /* ═══════════════════════════════════════════════
-   CUSTOM SEARCH DROPDOWNS (كما هو)
+   CUSTOM SEARCH DROPDOWNS (بدون تغيير)
 ═══════════════════════════════════════════════ */
 function initCustomSelect(id, hiddenSelectId) {
   const container = document.getElementById(id);
@@ -185,7 +192,7 @@ initCustomSelect('childrenSelect', 's-children');
 initCustomSelect('budgetSelect', 's-price');
 
 /* ═══════════════════════════════════════════════
-   SEARCH & RESULTS (كما هو)
+   SEARCH & RESULTS (بدون تغيير)
 ═══════════════════════════════════════════════ */
 document.getElementById('searchBtn').addEventListener('click', () => {
   const location = document.getElementById('s-location').value.trim();
@@ -274,7 +281,7 @@ document.querySelectorAll('.featured-card').forEach(card => {
 });
 
 /* ═══════════════════════════════════════════════
-   GALLERY MODAL (نفس السابق)
+   GALLERY MODAL (بدون تغيير)
 ═══════════════════════════════════════════════ */
 let galHotel = null, galTab = 'hotel', galIndex = 0;
 const galleryModal = document.getElementById('galleryModal');
@@ -345,7 +352,7 @@ galleryBackdrop.addEventListener('click', closeGallery);
 function closeGallery() { galleryModal.classList.remove('open'); document.body.style.overflow = ''; const existing = document.getElementById('signinTip'); if (existing) { existing.classList.remove('show'); setTimeout(() => existing.remove(), 220); } }
 
 /* ═══════════════════════════════════════════════
-   BOOKING MODAL (نفس السابق)
+   BOOKING MODAL (بدون تغيير)
 ═══════════════════════════════════════════════ */
 const bookingModal = document.getElementById('bookingModal');
 const bookingBackdrop = document.getElementById('bookingBackdrop');
@@ -468,7 +475,8 @@ if (payConfirm) {
 }
 
 /* ═══════════════════════════════════════════════
-   🧠 AI CONCIERGE — رد محلي ذكي مع سياق كامل
+   🧠 AI CONCIERGE — معتمدة على Worker يحتوي GROQ_API_KEY
+   (مع رد محلي ذكي كنسخة احتياطية)
 ═══════════════════════════════════════════════ */
 const aiModal = document.getElementById('aiModal');
 const aiMessages = document.getElementById('aiMessages');
@@ -487,12 +495,12 @@ function appendMsg(text, role) {
   return div;
 }
 
-// ---------- متغيرات السياق للمحادثة ----------
-let conversationHistory = [];      // يخزن { role, content, timestamp }
+// متغيرات السياق للمحادثة (للاستخدام في الرد المحلي الاحتياطي)
+let conversationHistory = [];
 let lastExtracted = { city: null, budget: null, rooms: 1, children: 0 };
 let lastUserMessage = '';
 
-// ---------- قاعدة بيانات الفنادق (للاستخدام داخل الرد المحلي) ----------
+// قاعدة بيانات الفنادق المحلية (للاستخدام الاحتياطي)
 const localHotelsData = {
   paris: [{ name:'Le Grand Hôtel', price:450, stars:5, desc:'Belle Époque grandeur' },
           { name:'Hôtel de Crillon', price:980, stars:5, desc:'Palatial 18th-century landmark' }],
@@ -506,32 +514,23 @@ const localHotelsData = {
   barcelona: [{ name:'Hotel Arts Barcelona', price:480, stars:5, desc:'Beachfront masterpiece' }]
 };
 
-// دالة استخلاص المعلومات من الرسالة + السياق
 function extractContext(message, previousContext) {
   const msg = message.toLowerCase();
   let city = previousContext.city;
   let budget = previousContext.budget;
   let rooms = previousContext.rooms;
   let children = previousContext.children;
-
-  // استخراج المدينة
   const cities = ['paris','dubai','tokyo','algiers','marrakech','istanbul','barcelona','london','new york'];
-  for (let c of cities) {
-    if (msg.includes(c)) { city = c; break; }
-  }
-  // استخراج الميزانية (أرقام مع أو بدون $)
+  for (let c of cities) if (msg.includes(c)) { city = c; break; }
   const budgetMatch = msg.match(/(?:budget|under|below|less than|max|up to|around|about|for)?\s*\$?(\d{2,4})/i);
   if (budgetMatch) budget = parseInt(budgetMatch[1]);
-  // استخراج عدد الغرف
   const roomMatch = msg.match(/(\d+)\s*rooms?/i);
   if (roomMatch) rooms = parseInt(roomMatch[1]);
-  // استخراج عدد الأطفال
   const childMatch = msg.match(/(\d+)\s*(?:child|kid|children)/i);
   if (childMatch) children = parseInt(childMatch[1]);
   return { city, budget, rooms, children };
 }
 
-// دالة توليد رد طبيعي بناءً على السياق
 function generateContextualResponse(userMessage, previousContext, history) {
   const isArabic = /[\u0600-\u06FF]/.test(userMessage);
   const context = extractContext(userMessage, previousContext);
@@ -539,8 +538,6 @@ function generateContextualResponse(userMessage, previousContext, history) {
   const budget = context.budget;
   const rooms = context.rooms;
   const children = context.children;
-  
-  // حالة 1: لا توجد مدينة ولا ميزانية -> اسأل عن المدينة والميزانية
   if (!city && !budget) {
     const greetings = ['Hello', 'Hi', 'Hey', 'Greetings', 'مرحباً', 'أهلاً', 'السلام'];
     const firstWord = userMessage.trim().split(' ')[0];
@@ -552,18 +549,15 @@ function generateContextualResponse(userMessage, previousContext, history) {
     return isArabic ? "أين تحب أن تسافر؟ وما هي ميزانيتك التقريبية لليلة؟ يمكنك مثلاً: 'باريس بـ 300 دولار'." 
                     : "Where would you like to travel? And what's your approximate nightly budget? Example: 'Paris under $300'.";
   }
-  // حالة 2: توجد مدينة ولكن لا توجد ميزانية -> اسأل عن الميزانية
   if (city && !budget) {
     const cityName = city.charAt(0).toUpperCase() + city.slice(1);
     return isArabic ? `فنادق ${cityName} الرائعة تبدأ من $${localHotelsData[city]?.[0]?.price || 'مختلفة'}/ليلة. ما هي ميزانيتك التقريبية؟` 
                     : `Wonderful choice! Hotels in ${cityName} start from $${localHotelsData[city]?.[0]?.price || 'various'}/night. What's your budget?`;
   }
-  // حالة 3: توجد ميزانية ولكن لا توجد مدينة -> اسأل عن المدينة
   if (!city && budget) {
     return isArabic ? `بميزانية $${budget}/ليلة، يمكنك الإقامة في فنادق فاخرة في باريس، دبي، الجزائر، مراكش، إسطنبول، أو برشلونة. أي مدينة تفضلها؟`
                     : `With a budget of $${budget}/night, you can enjoy luxury hotels in Paris, Dubai, Algiers, Marrakech, Istanbul, or Barcelona. Which city interests you?`;
   }
-  // حالة 4: توجد مدينة وميزانية -> اقترح فنادق
   if (city && budget) {
     const available = localHotelsData[city]?.filter(h => h.price <= budget) || [];
     const cityName = city.charAt(0).toUpperCase() + city.slice(1);
@@ -584,29 +578,22 @@ function generateContextualResponse(userMessage, previousContext, history) {
     reply += isArabic ? ` هل تريد الحجز؟` : ` Shall I check availability?`;
     return reply;
   }
-  // افتراضي (للامان)
   return isArabic ? "أخبرني أكثر عن رحلتك المثالية (المدينة والميزانية)." : "Tell me more about your ideal trip (city and budget).";
 }
 
-// دالة الرد المحلي الرئيسية (تحتفظ بالسياق)
 function smartLocalResponse(userMessage) {
-  // تحديث آخر رسالة للمستخدم
   lastUserMessage = userMessage;
-  // استخراج السياق من آخر 2 رسالة
   let ctx = { city: lastExtracted.city, budget: lastExtracted.budget, rooms: lastExtracted.rooms, children: lastExtracted.children };
   const newCtx = extractContext(userMessage, ctx);
   lastExtracted = { city: newCtx.city || lastExtracted.city, budget: newCtx.budget || lastExtracted.budget, rooms: newCtx.rooms || lastExtracted.rooms, children: newCtx.children || lastExtracted.children };
-  // إنشاء الرد
   const response = generateContextualResponse(userMessage, lastExtracted, conversationHistory);
-  // حفظ المحادثة في السجل
   conversationHistory.push({ role: 'user', content: userMessage, timestamp: Date.now() });
   conversationHistory.push({ role: 'assistant', content: response, timestamp: Date.now() });
-  // الاحتفاظ بآخر 10 رسائل فقط
   if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
   return response;
 }
 
-// الدالة التي تحاول Worker أولاً، ثم تنتقل إلى الرد المحلي الذكي
+// دالة الإرسال الرئيسية: تحاول الـ Worker أولاً، ثم تستخدم الرد المحلي الذكي
 async function sendAI() {
   const text = aiInput.value.trim();
   if (!text) return;
@@ -683,7 +670,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ═══════════════════════════════════════════════
-   OWNER ROLE NAV
+   OWNER ROLE NAV (بدون تغيير)
 ═══════════════════════════════════════════════ */
 (function() {
   const u = JSON.parse(localStorage.getItem('aurum-user') || 'null');
